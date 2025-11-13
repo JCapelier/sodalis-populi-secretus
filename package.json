@@ -7,8 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "migrate:up": "DATABASE_URL=postgres://postgres:postgres@localhost:5433/sodalis_populi_secretus node-pg-migrate up -m migrations",
-    "migrate:down": "DATABASE_URL=postgres://postgres:postgres@localhost:5433/sodalis_populi_secretus node-pg-migrate down -m migrations"
+    "migrate:up": "npx dotenv -e .env.local -- node-pg-migrate up -m migrations -d DATABASE_URL",
+    "migrate:down": "npx dotenv -e .env.local -- node-pg-migrate down -m migrations -d DATABASE_URL",
+    "seed": "npx dotenv -e .env.local -- node scripts/seed.js"
   },
   "dependencies": {
     "next": "16.0.2",
@@ -28,6 +29,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.0.2",
     "tailwindcss": "^4",
+    "ts-node": "^10.9.2",
     "typescript": "^5"
   }
 }
