@@ -12,7 +12,9 @@
     "seed": "npx dotenv -e .env.local -- node scripts/seed.js"
   },
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "next": "16.0.2",
+    "next-auth": "^4.24.13",
     "node-pg-migrate": "^8.0.3",
     "pg": "^8.16.3",
     "react": "19.2.0",
@@ -20,6 +22,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/bcrypt": "^6.0.0",
     "@types/node": "^20",
     "@types/pg": "^8.15.6",
     "@types/react": "^19",

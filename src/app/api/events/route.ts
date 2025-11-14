@@ -19,12 +19,13 @@ export async function POST(request: Readonly<Request>) {
       VALUES ($1, $2, $3, $4)
       RETURNING *
       `;
-      const result = await query(insertQuery, [
-        name.trim(),
-        ends_at,
-        admin_id,
-        price_limit_cents || null,
-      ]);
+
+    const result = await query(insertQuery, [
+      name.trim(),
+      ends_at,
+      admin_id,
+      price_limit_cents || null,
+    ]);
 
     return NextResponse.json({ event: result.rows[0] }, { status: 201 });
   } catch (error) {
