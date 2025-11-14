@@ -1,6 +1,6 @@
 import SignInForm from "@/components/SignInForm";
 
-export default async function HomePage() {
+export default async function SignInPage() {
   return (
     <SignInForm />
   );

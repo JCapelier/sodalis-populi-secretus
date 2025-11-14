@@ -1,13 +1,14 @@
 'use client';
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 
 export default function CreateEventForm() {
   const [name, setName] = useState('');
   const [endsAt, setEndsAt] = useState('');
   const [priceLimit, setPriceLimit] = useState('');
-  const [username, setUsername] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const { data: session } = useSession();
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -18,27 +19,14 @@ export default function CreateEventForm() {
       setError('Name is required');
       return;
     }
-    if (!username.trim()) {
-      setError('Admin username is required');
-      return;
-    }
-
-    // Fetch admin_id from username
-    let admin_id;
-    try {
-      const result = await fetch(`/api/users/by-username?username=${encodeURIComponent(username.trim())}`);
-      if (!result.ok) throw new Error('Could not resolve admin username');
-      const data = await result.json();
-      admin_id = data.id;
-      if (!admin_id) throw new Error('No admin ID found for username');
-    } catch (error: any) {
-      setError(error.message || 'Failed to resolve admin username');
+    if (!(session && session.user && session.user.id)) {
+      setError('You must be signed in to create an event');
       return;
     }
 
     const payload = {
       name: name.trim(),
-      admin_id,
+      admin_id: session.user.id,
       ends_at: endsAt || null,
       price_limit_cents: priceLimit ? Math.round(Number(priceLimit) * 100) : null,
     };
@@ -57,7 +45,6 @@ export default function CreateEventForm() {
       setName('');
       setEndsAt('');
       setPriceLimit('');
-      setUsername('');
     }
   }
 
@@ -67,12 +54,6 @@ export default function CreateEventForm() {
         <label>
           Event name:
           <input value={name} onChange={event => setName(event.target.value)} required />
-        </label>
-      </div>
-      <div>
-        <label>
-          Admin username:
-          <input value={username} onChange={event => setUsername(event.target.value)} required />
         </label>
       </div>
       <div>
