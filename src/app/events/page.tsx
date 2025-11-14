@@ -30,6 +30,7 @@ export default async function EventsIndex() {
           name={event.name}
           endsAt={event.ends_at ? new Date(event.ends_at).toLocaleDateString() : undefined}
           priceLimitCents={event.price_limit_cents}
+          eventId={event.id}
         />
       ))}
     </div>
