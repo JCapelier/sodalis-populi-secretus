@@ -1,5 +1,6 @@
 'use client';
 import { useState } from "react";
+import InviteParticipantsField from "./InviteParticipantsField";
 import { useSession } from "next-auth/react";
 
 export default function CreateEventForm() {
@@ -8,6 +9,7 @@ export default function CreateEventForm() {
   const [priceLimit, setPriceLimit] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [invited, setInvited] = useState<{ id: number; username: string }[]>([]);
   const { data: session } = useSession();
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -49,6 +51,7 @@ export default function CreateEventForm() {
   }
 
   return (
+    <>
     <form onSubmit={handleSubmit}>
       <div>
         <label>
@@ -72,5 +75,21 @@ export default function CreateEventForm() {
       {error && <div style={{ color: 'red' }}>{error}</div>}
       {success && <div style={{ color: 'green' }}>{success}</div>}
     </form>
+    <InviteParticipantsField
+      onInvite={user => {
+        if (!invited.some(u => u.id === user.id)) setInvited([...invited, user]);
+      }}
+    />
+    {invited.length > 0 && (
+      <div className="mt-2">
+        <div className="font-semibold mb-1">Invited participants:</div>
+        <ul className="list-disc ml-6">
+          {invited.map(u => (
+            <li key={u.id}>{u.username}</li>
+          ))}
+        </ul>
+      </div>
+    )}
+  </>
   );
 }

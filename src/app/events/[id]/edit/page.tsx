@@ -1,4 +1,4 @@
-import EditEventForm from "@/components/EditEventForm";
+import EditEventForm from "@/components/forms/EditEventForm";
 
 export default async function EditEventPage({ params }) {
   const { id } = await params;

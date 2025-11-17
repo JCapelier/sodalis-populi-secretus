@@ -2,6 +2,7 @@
 import { Event } from "@/type";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import InviteParticipantsField from "./InviteParticipantsField";
 
 interface EditEventFormProps {
   idString: string;
@@ -14,6 +15,7 @@ export default function EditEventForm({ idString }: EditEventFormProps) {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [event, setEvent] = useState<Event | null>(null);
+  const [invited, setInvited] = useState<{ id: number; username: string }[]>([]);
   const id = Number(idString);
 
   useEffect(() => {
@@ -84,12 +86,26 @@ export default function EditEventForm({ idString }: EditEventFormProps) {
           <input type="number" min="0" step="0.01" value={priceLimit} onChange={event => setPriceLimit(event.target.value)} />
         </label>
       </div>
+      <InviteParticipantsField
+        onInvite={user => {
+          if (!invited.some(u => u.id === user.id)) setInvited([...invited, user]);
+        }}
+      />
+      {invited.length > 0 && (
+        <div className="mt-2">
+          <div className="font-semibold mb-1">Invited participants:</div>
+          <ul className="list-disc ml-6">
+            {invited.map(u => (
+              <li key={u.id}>{u.username}</li>
+            ))}
+          </ul>
+        </div>
+      )}
       <button type="submit">Update Event</button>
       {error && <div style={{ color: 'red' }}>{error}</div>}
       {success && <div style={{ color: 'green' }}>{success}</div>}
     </form>
     <Link href='/events'>Back to index</Link>
-
   </>
   );
 }
