@@ -3,8 +3,6 @@ import { query } from "@/lib/db";
 import EventDetails from "@/components/EventDetails";
 import ParticipantsList from "@/components/ParticipantsList";
 import { Event } from "@/type";
-import { cp } from "fs";
-import { renameTrigger } from "node-pg-migrate/operations/triggers/renameTrigger";
 
 async function fetchEvent(eventId: number) {
   const fetchEventByIdQuery = `SELECT * FROM events WHERE id = $1`;

@@ -1,7 +1,7 @@
-import CreateEventForm from "@/components/forms/CreateEventForm";
+import EventForm from "@/components/forms/EventForm";
 
 export default async function NewEventPage() {
   return (
-    <CreateEventForm />
+    <EventForm />
   );
 }

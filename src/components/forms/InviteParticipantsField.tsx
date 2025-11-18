@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { ParticipantFormEntry } from "./EditEventForm";
+import { ParticipantFormEntry } from "./EventForm";
 
 type InviteParticipantsFieldProps = {
   onInvite: (user: ParticipantFormEntry) => void;
