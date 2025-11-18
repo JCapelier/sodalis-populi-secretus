@@ -27,6 +27,7 @@ export type Event = {
   name: string;
   ends_at?: string | null;
   price_limit_cents?: number | null;
+  admin_id: number;
 };
 
 export type User = {

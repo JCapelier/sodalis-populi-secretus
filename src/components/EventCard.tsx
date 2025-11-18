@@ -6,9 +6,13 @@ interface EventCardProps {
   priceLimitCents?: number | null;
   adminName?: string;
   eventId: number;
+  adminId: number;
+  currentUserId: number
 }
 
-export default function EventCard({ name, endsAt, priceLimitCents, adminName, eventId }: EventCardProps) {
+export default function EventCard({ name, endsAt, priceLimitCents, adminName, eventId, adminId, currentUserId }: EventCardProps) {
+  console.log("adminId:", adminId, "currentUserId:", currentUserId);
+
   return (
     <div style={{ border: "1px solid #ccc", borderRadius: 8, padding: 16, marginBottom: 16, position: 'relative', minHeight: 120 }}>
       <h2>{name}</h2>
@@ -18,7 +22,7 @@ export default function EventCard({ name, endsAt, priceLimitCents, adminName, ev
         <div><strong>Price limit:</strong> €{(priceLimitCents / 100).toFixed(2)}</div>
       )}
       <div style={{ position: 'absolute', bottom: 16, right: 16 }}>
-        <EditEventButton eventId={eventId} />
+        {Number(currentUserId) === Number(adminId) && <EditEventButton eventId={eventId} />}
       </div>
     </div>
   );
