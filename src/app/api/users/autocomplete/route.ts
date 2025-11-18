@@ -6,7 +6,7 @@ export async function GET(request: Readonly<Request>) {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get('search');
 
-    const fetchQuery =  `SELECT * FROM users where username ILIKE $1`;
+    const fetchQuery =  `SELECT id, username FROM users where username ILIKE $1`;
     const result = await query(fetchQuery, [`%${search}%`]);
 
     if (!result.rows || result.rows.length === 0) {

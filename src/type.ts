@@ -14,6 +14,8 @@ declare module "next-auth" {
   }
 }
 
+export type PublicUser = { id: number, username: string};
+
 export enum Status {
   Confirmed = "confirmed",
   Pending = "pending",

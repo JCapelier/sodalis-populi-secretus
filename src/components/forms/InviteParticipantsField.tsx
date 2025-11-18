@@ -1,17 +1,16 @@
 import React, { useState, useRef } from "react";
+import { ParticipantFormEntry } from "./EditEventForm";
 
 type InviteParticipantsFieldProps = {
-  onInvite: (user: { id: number; username: string }) => void;
+  onInvite: (user: ParticipantFormEntry) => void;
 };
 
 
 
 const InviteParticipantsField: React.FC<InviteParticipantsFieldProps> = ({ onInvite }) => {
-  console.log('coucou')
   const [username, setUsername] = useState("");
-	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
-	const [suggestions, setSuggestions] = useState<{ id: number; username: string }[]>([]);
+	const [suggestions, setSuggestions] = useState<ParticipantFormEntry[]>([]);
 	const [showSuggestions, setShowSuggestions] = useState(false);
 	const inputRef = useRef<HTMLInputElement>(null);
 
@@ -25,11 +24,10 @@ const InviteParticipantsField: React.FC<InviteParticipantsFieldProps> = ({ onInv
 			setShowSuggestions(false);
 			return;
 		}
-		setLoading(true);
 		try {
-      const res = await fetch(`/api/users/autocomplete?search=${encodeURIComponent(value)}`);
-			const data = await res.json();
-			if (res.ok && Array.isArray(data.users)) {
+      const result = await fetch(`/api/users/autocomplete?search=${encodeURIComponent(value)}`);
+			const data = await result.json();
+			if (result.ok && Array.isArray(data.users)) {
         setSuggestions(data.users);
 				setShowSuggestions(true);
 			} else {
@@ -39,14 +37,12 @@ const InviteParticipantsField: React.FC<InviteParticipantsFieldProps> = ({ onInv
 		} catch {
 			setSuggestions([]);
 			setShowSuggestions(false);
-		} finally {
-			setLoading(false);
-		}
+    }
 	};
 
 	// Handle selecting a suggestion
-	const handleSelect = (user: { id: number; username: string }) => {
-		setUsername(user.username);
+	const handleSelect = (user: { user_id: number; username: string }) => {
+		setUsername('');
 		setSuggestions([]);
 		setShowSuggestions(false);
 		onInvite(user);
@@ -69,21 +65,23 @@ const InviteParticipantsField: React.FC<InviteParticipantsFieldProps> = ({ onInv
 				onBlur={handleBlur}
 				placeholder="Enter username to invite"
 				className="border rounded px-2 py-1 w-full"
-				disabled={loading}
-				required
 				autoComplete="off"
 			/>
-			{showSuggestions && suggestions.length > 0 && (
+			{showSuggestions && (
 				<ul className="absolute z-10 bg-white border rounded w-full mt-1 max-h-40 overflow-y-auto shadow">
-					{suggestions.map((user) => (
-						<li
-							key={user.id}
-							className="px-3 py-2 cursor-pointer hover:bg-blue-100"
-							onMouseDown={() => handleSelect(user)}
-						>
-							{user.username}
-						</li>
-					))}
+					{suggestions.length > 0 ? (
+						suggestions.map((user) => (
+							<li
+								key={user.user_id}
+								className="px-3 py-2 cursor-pointer hover:bg-blue-100"
+								onMouseDown={() => handleSelect(user)}
+							>
+								{user.username}
+							</li>
+						))
+					) : (
+						<li className="px-3 py-2 text-gray-500">No users found</li>
+					)}
 				</ul>
 			)}
 			{error && <span className="text-red-500 ml-2 text-sm">{error}</span>}

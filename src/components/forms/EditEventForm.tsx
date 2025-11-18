@@ -1,12 +1,15 @@
 'use client';
-import { Event } from "@/type";
+import { Event, Status } from "@/type";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import InviteParticipantsField from "./InviteParticipantsField";
+import { apiGet } from "@/lib/api";
 
 interface EditEventFormProps {
   idString: string;
 }
+
+export type ParticipantFormEntry = { user_id: number; username: string; status?: Status};
 
 export default function EditEventForm({ idString }: EditEventFormProps) {
   const [name, setName] = useState("");
@@ -15,8 +18,12 @@ export default function EditEventForm({ idString }: EditEventFormProps) {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [event, setEvent] = useState<Event | null>(null);
-  const [invited, setInvited] = useState<{ id: number; username: string }[]>([]);
-  const id = Number(idString);
+  const [invited, setInvited] = useState<ParticipantFormEntry[]>([]);
+  const id: number = Number(idString);
+
+  async function fetchEventParticipants(id: number): Promise<ParticipantFormEntry[]> {
+    return await apiGet<ParticipantFormEntry[]>(`/api/event-participants/by-event-id?event-id=${id}`);
+  }
 
   useEffect(() => {
     fetch(`/api/events/${id}`)
@@ -33,7 +40,16 @@ export default function EditEventForm({ idString }: EditEventFormProps) {
       });
   }, [id]);
 
+  useEffect(() => {
+    async function loadParticipants() {
+      const participants = await fetchEventParticipants(id);
+      setInvited(participants);
+    }
+    loadParticipants();
+  }, [id]);
+
   if (!event) return <div>Loading...</div>;
+
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -49,6 +65,7 @@ export default function EditEventForm({ idString }: EditEventFormProps) {
       name: name.trim(),
       ends_at: endsAt || null,
       price_limit_cents: priceLimit ? Math.round(Number(priceLimit) * 100) : null,
+      participants: invited
     };
 
     const result = await fetch(`/api/events/${id}`, {
@@ -86,21 +103,31 @@ export default function EditEventForm({ idString }: EditEventFormProps) {
           <input type="number" min="0" step="0.01" value={priceLimit} onChange={event => setPriceLimit(event.target.value)} />
         </label>
       </div>
-      <InviteParticipantsField
-        onInvite={user => {
-          if (!invited.some(u => u.id === user.id)) setInvited([...invited, user]);
-        }}
+    <InviteParticipantsField
+      onInvite={user => {
+        if (!invited.some(u => u.user_id === user.user_id)) setInvited([...invited, user]);
+      }}
       />
-      {invited.length > 0 && (
-        <div className="mt-2">
-          <div className="font-semibold mb-1">Invited participants:</div>
-          <ul className="list-disc ml-6">
-            {invited.map(u => (
-              <li key={u.id}>{u.username}</li>
-            ))}
-          </ul>
-        </div>
-      )}
+    {invited.length > 0 && (
+      <div className="mt-2">
+        <div className="font-semibold mb-1">Invited participants:</div>
+        <ul className="list-disc ml-6">
+          {invited.map(u => (
+            <li key={u.user_id} className="flex items-center gap-2">
+              <span>{u.username}</span>
+              <button
+                type="button"
+                aria-label={`Remove ${u.username}`}
+                className="text-red-500 hover:text-red-700 ml-2"
+                onClick={() => setInvited(invited.filter(p => p.user_id !== u.user_id))}
+              >
+                &#10005;
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+    )}
       <button type="submit">Update Event</button>
       {error && <div style={{ color: 'red' }}>{error}</div>}
       {success && <div style={{ color: 'green' }}>{success}</div>}
