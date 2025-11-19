@@ -2,6 +2,7 @@
 import { Event, Status } from "@/type";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import ExclusionsManager from "./ExclusionsManager";
 import InviteParticipantsField from "./InviteParticipantsField";
 import { apiGet } from "@/lib/api";
 import { useSession } from "next-auth/react";
@@ -19,6 +20,7 @@ export default function EventForm({ idString }: EventFormProps) {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [invited, setInvited] = useState<ParticipantFormEntry[]>([]);
+  const [exclusions, setExclusions] = useState<{ user_id: number; excluded_user_id: number }[]>([]);
   const { data: session } = useSession();
   const eventId = idString ? Number(idString) : undefined;
   const isEdit = !!eventId;
@@ -37,6 +39,7 @@ export default function EventForm({ idString }: EventFormProps) {
       );
     });
     apiGet<ParticipantFormEntry[]>(`/api/event-participants/by-event-id?event-id=${eventId}`).then(setInvited);
+    apiGet<{ user_id: number; excluded_user_id: number }[]>(`/api/exclusions/by-event-id?event-id=${eventId}`).then(setExclusions);
   }, [eventId, isEdit]);
 
   if (!(session && session.user && session.user.id)) {
@@ -59,6 +62,7 @@ export default function EventForm({ idString }: EventFormProps) {
       ends_at: endsAt || null,
       price_limit_cents: priceLimit ? Math.round(Number(priceLimit) * 100) : null,
       participants: invited,
+      exclusions,
     };
 
     let result, formData;
@@ -135,6 +139,13 @@ export default function EventForm({ idString }: EventFormProps) {
               ))}
             </ul>
           </div>
+        )}
+        {invited.length >= 2 && (
+          <ExclusionsManager
+            participants={invited}
+            exclusions={exclusions}
+            setExclusions={setExclusions}
+          />
         )}
         <button type="submit">{isEdit ? 'Update Event' : 'Create Event'}</button>
         {error && <div style={{ color: 'red' }}>{error}</div>}
