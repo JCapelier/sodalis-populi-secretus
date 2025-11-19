@@ -49,3 +49,6 @@ export type EventParticipantFull = {
   user: User;
   status: Status;
 }
+
+export type Exclusion = { user_id: number; excluded_user_id: number };
+export type Participant = { user_id: number; username: string };

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
+import { hasValidAssignment } from "@/utils/form-validation-helper";
 
 export async function GET(request: Request, context: any) {
   const params = await context.params;
@@ -95,6 +96,20 @@ export async function PUT(request: Request, context: any) {
 
     // 2. Add exclusions that are in the new list but not in the DB
     // To avoid duplicate inserts, keep a Set of processed keys
+    // Prepare up-to-date participants and exclusions for the check
+    const editingParticipants = body.participants;
+    // Build exclusions array (including reciprocals)
+    const editingExclusions = [];
+    for (const exclusion of body.exclusions) {
+      editingExclusions.push({ user_id: exclusion.user_id, excluded_user_id: exclusion.excluded_user_id });
+      if (exclusion.reciprocal) {
+        editingExclusions.push({ user_id: exclusion.excluded_user_id, excluded_user_id: exclusion.user_id });
+      }
+    }
+    if (!hasValidAssignment(editingParticipants, editingExclusions)) {
+      return NextResponse.json({ error: "No valid assignment possible with these exclusions." }, { status: 400 });
+    }
+
     const insertedKeys = new Set(previousExclusions.map((ex: any) => `${ex.user_id}:${ex.excluded_user_id}`));
     for (const exclusion of body.exclusions) {
       const key = `${exclusion.user_id}:${exclusion.excluded_user_id}`;
