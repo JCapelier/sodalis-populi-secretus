@@ -140,7 +140,7 @@ export async function PUT(request: Request, context: any) {
     }
     return NextResponse.json(eventResult.rows[0]);
   } catch (error) {
-    console.log('Update event error', error);
+    console.error('Update event error', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

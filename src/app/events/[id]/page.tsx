@@ -51,7 +51,6 @@ async function fetchEventParticipants(eventId: number) {
 
 export default async function EventShowPage({params}) {
   const { id } = await params;
-  console.log(id)
   const event: Event = await fetchEvent(id);
   const participants = await fetchEventParticipants(id);
 
