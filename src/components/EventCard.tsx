@@ -1,4 +1,5 @@
 import EditEventButton from "./EditEventButton";
+import DraftButton from "./DraftButton";
 
 interface EventCardProps {
   name: string;
@@ -21,8 +22,9 @@ export default function EventCard({ name, endsAt, priceLimitCents, adminName, ev
       {priceLimitCents !== undefined && priceLimitCents !== null && (
         <div><strong>Price limit:</strong> €{(priceLimitCents / 100).toFixed(2)}</div>
       )}
-      <div style={{ position: 'absolute', bottom: 16, right: 16 }}>
+      <div style={{ position: 'absolute', bottom: 16, right: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
         {Number(currentUserId) === Number(adminId) && <EditEventButton eventId={eventId} />}
+        <DraftButton eventId={eventId} />
       </div>
     </div>
   );
