@@ -65,7 +65,6 @@ async function main() {
   );
 
   await client.end();
-  console.log('Seed data inserted successfully.');
 }
 
 main().catch((e) => {

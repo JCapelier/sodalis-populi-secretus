@@ -66,7 +66,6 @@ export default function EventForm({ idString }: EventFormProps) {
     };
 
     let result, formData;
-    console.log(invited)
     if (isEdit && eventId) {
       result = await fetch(`/api/events/${eventId}`, {
         method: 'PUT',

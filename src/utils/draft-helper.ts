@@ -1,4 +1,7 @@
 import { Exclusion, Pairing, Participant } from "@/type";
+import { query } from "@/lib/db";
+import { shuffleArray } from "@/utils/shuffle-array";
+
 
 export function possibleDraws(
   drafterId: Readonly<number>,
@@ -23,43 +26,53 @@ export function assignPairings(
   exclusions: Exclusion[],
   currentAssignments: Pairing[] = [],
 ): { pairings: Pairing[], success: boolean } {
-  // Success: all givers assigned
   if (currentAssignments.length === givers.length) {
-    return { pairings: currentAssignments, success: true };
+    return { pairings: currentAssignments.slice(), success: true };
   }
-
-  // Find the next giver who needs a receiver
   const nextGiver = givers.find(giver =>
     !currentAssignments.some(assignment => assignment.giver_id === giver.user_id)
   );
   if (!nextGiver) {
-    // Should not happen, but just in case
-    return { pairings: currentAssignments, success: false };
+    return { pairings: currentAssignments.slice(), success: false };
   }
-
-  // Get possible receivers for this giver
-  const possibleReceivers = possibleDraws(
+  const possibleReceivers = shuffleArray(possibleDraws(
     nextGiver.user_id,
     receivers,
     exclusions,
     currentAssignments
-  );
-
-  // Try each possible receiver
+  ));
   for (const receiver of possibleReceivers) {
-    // Add this pairing
     currentAssignments.push({ giver_id: nextGiver.user_id, receiver_id: receiver.user_id });
-
-    // Recurse
     const result = assignPairings(givers, receivers, exclusions, currentAssignments);
     if (result.success) {
-      return result; // Found a valid assignment!
+      return result;
     }
-
-    // Backtrack
     currentAssignments.pop();
   }
+  return { pairings: currentAssignments.slice(), success: false };
+}
 
-  // No valid assignment found for this giver
-  return { pairings: currentAssignments, success: false };
+// Helper to run the full draft for an event (participants, exclusions fetched outside)
+export async function runDraft(
+  eventId: number,
+  participants: Participant[],
+  exclusions: Exclusion[],
+): Promise<{ success: boolean; pairings?: Pairing[]; error?: string }> {
+  const { pairings, success } = assignPairings(
+    shuffleArray(participants),
+    shuffleArray(participants),
+    exclusions,
+    []
+  );
+  if (!success || !pairings) {
+    return { success: false, error: "No valid assignment possible for this event." };
+  }
+  // Remove old pairings for this event
+  await query(`DELETE FROM pairings WHERE event_id = $1`, [eventId]);
+  // Insert new pairings
+  const insertPairingQuery = `INSERT INTO pairings (event_id, giver_id, receiver_id) VALUES ($1, $2, $3)`;
+  for (const pairing of pairings) {
+    await query(insertPairingQuery, [eventId, pairing.giver_id, pairing.receiver_id]);
+  }
+  return { success: true, pairings };
 }

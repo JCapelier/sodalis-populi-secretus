@@ -12,8 +12,6 @@ interface EventCardProps {
 }
 
 export default function EventCard({ name, endsAt, priceLimitCents, adminName, eventId, adminId, currentUserId }: EventCardProps) {
-  console.log("adminId:", adminId, "currentUserId:", currentUserId);
-
   return (
     <div style={{ border: "1px solid #ccc", borderRadius: 8, padding: 16, marginBottom: 16, position: 'relative', minHeight: 120 }}>
       <h2>{name}</h2>
@@ -24,7 +22,7 @@ export default function EventCard({ name, endsAt, priceLimitCents, adminName, ev
       )}
       <div style={{ position: 'absolute', bottom: 16, right: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
         {Number(currentUserId) === Number(adminId) && <EditEventButton eventId={eventId} />}
-        <DraftButton eventId={eventId} />
+        <DraftButton eventId={eventId} currentUserId={currentUserId} />
       </div>
     </div>
   );
