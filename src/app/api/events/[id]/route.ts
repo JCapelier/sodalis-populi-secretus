@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { hasValidAssignment } from "@/utils/form-validation-helper";
+import { runDraft } from "@/utils/draft-helper";
 
 export async function GET(request: Request, context: any) {
   const params = await context.params;
@@ -126,6 +127,17 @@ export async function PUT(request: Request, context: any) {
       }
     }
 
+    const prevUserIdsSorted = prevUserIds.slice().sort();
+    const newUserIdsSorted = newUserIds.slice().sort();
+    const participantsChanged = JSON.stringify(prevUserIdsSorted) !== JSON.stringify(newUserIdsSorted);
+
+    const prevExclusionKeys = previousExclusions.map((e: any) => `${e.user_id}:${e.excluded_user_id}`).sort();
+    const newExclusionKeysArr = editingExclusions.map((e: any) => `${e.user_id}:${e.excluded_user_id}`).sort();
+    const exclusionsChanged = JSON.stringify(prevExclusionKeys) !== JSON.stringify(newExclusionKeysArr);
+
+    if (participantsChanged || exclusionsChanged) {
+      await runDraft(id, editingParticipants, editingExclusions);
+    }
     return NextResponse.json(eventResult.rows[0]);
   } catch (error) {
     console.log('Update event error', error);

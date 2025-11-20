@@ -1,6 +1,8 @@
 'use client';
 import React, { useState, } from "react";
 import { useSession } from "next-auth/react";
+import { apiGet } from "@/lib/api";
+import { Pairing } from "@/type";
 
 interface DraftButtonProps {
   eventId: number;
@@ -13,23 +15,28 @@ const DraftButton: React.FC<DraftButtonProps> = ({ eventId }) => {
   const [error, setError] = useState<string | null>(null);
   const { data: session } = useSession();
 
+
   const handleDraft = async () => {
     setLoading(true);
     setError(null);
     setResult(null);
-    const payload = {drafterId: session?.user?.id}
-
     try {
-      const result = await fetch(`/api/events/${eventId}/draft`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json'},
-        body: JSON.stringify(payload),
-      })
-      if (!result.ok) throw new Error("Draft failed");
-      const data = await result.json();
-      setResult(JSON.stringify(data, null, 2));
-    } catch (e: any) {
-      setError(e.message || "Unknown error");
+      const pairing = await apiGet<Pairing>(`/api/events/${eventId}/my-pairing?userId=${session?.user?.id}`);
+      setResult(pairing ? String(pairing.receiver_id) : null);
+    } catch (e: unknown) {
+      function isErrorWithMessage(error: unknown): error is { message: string } {
+        return (
+          typeof error === 'object' &&
+          error !== null &&
+          'message' in error &&
+          typeof (error as { message: unknown }).message === 'string'
+        );
+      }
+      if (isErrorWithMessage(e)) {
+        setError(e.message);
+      } else {
+        setError("Unknown error");
+      }
     } finally {
       setLoading(false);
     }

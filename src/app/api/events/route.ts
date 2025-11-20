@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { hasValidAssignment } from "@/utils/form-validation-helper";
+import { runDraft } from "@/utils/draft-helper";
 
 export async function POST(request: Readonly<Request>) {
   try {
@@ -53,6 +54,8 @@ export async function POST(request: Readonly<Request>) {
     if (!hasValidAssignment(participants, exclusions)) {
       return NextResponse.json({ error: "No valid assignment possible with these exclusions." }, { status: 400 });
     }
+
+    await runDraft(eventId, participants, exclusions);
 
     return NextResponse.json({ event: eventResult.rows[0] }, { status: 201 });
   } catch (error) {
