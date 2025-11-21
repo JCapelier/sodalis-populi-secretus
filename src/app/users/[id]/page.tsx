@@ -1,9 +1,9 @@
 import React from "react";
 import Dashboard from "@/components/Dashboard";
 import EventsIndex from "@/components/EventsIndex";
-import CreateEventButton from "@/components/CreateEventButton";
 import { getEventInfo, query } from "@/lib/db";
 import { EventInfo, Event as EventType } from "@/type";
+import CreateEventButton from "@/components/CreateEventButton";
 
 interface Props {
   params: { id: string };
