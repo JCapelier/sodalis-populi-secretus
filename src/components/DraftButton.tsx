@@ -16,7 +16,7 @@ const DraftButton: React.FC<DraftButtonProps> = ({ eventId, currentUserId }) => 
   const [error, setError] = useState<string | null>(null);
   const { data: session } = useSession();
   console.log(currentUserId)
-  console.log(eventId)
+
 
 
   const handleDraft = async () => {
@@ -50,7 +50,6 @@ const DraftButton: React.FC<DraftButtonProps> = ({ eventId, currentUserId }) => 
   const userIdRaw = session?.user?.id;
   const userId = typeof userIdRaw === 'number' ? userIdRaw : Number(userIdRaw);
   const isSignedIn = typeof userId === 'number' && !isNaN(userId) && userId > 0;
-  console.log(result)
 
   return (
     <>
@@ -65,16 +64,19 @@ const DraftButton: React.FC<DraftButtonProps> = ({ eventId, currentUserId }) => 
         <div className="mt-2 text-sm text-gray-500">Sign in to see your pairing</div>
       )}
       {open && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white p-4 rounded shadow-lg min-w-[300px] max-w-[90vw]">
-            <div className="flex justify-between items-center mb-2">
-              <span className="font-semibold">Draft Result</span>
-              <button onClick={() => setOpen(false)} className="text-gray-500 hover:text-black">&times;</button>
+        <div className="fixed inset-0 z-1000 flex items-center justify-center">
+          {/* Overlay */}
+          <div className="absolute inset-0 bg-transparent backdrop-blur-sm" />
+          {/* Modal */}
+          <div className="relative bg-white border-2 border-blue-400 p-6 rounded-xl shadow-2xl min-w-[320px] max-w-[90vw] flex flex-col items-center">
+            <div className="flex justify-between items-center w-full mb-4">
+              <span className="font-semibold text-lg text-blue-800">Draft Result</span>
+              <button onClick={() => setOpen(false)} className="text-gray-500 hover:text-black text-2xl font-bold px-2">&times;</button>
             </div>
-            {loading && <div>Loading...</div>}
-            {error && <div className="text-red-500">{error}</div>}
+            {loading && <div className="text-blue-700 font-semibold">Loading...</div>}
+            {error && <div className="text-red-500 font-semibold">{error}</div>}
             {result && (
-              <pre className="bg-gray-100 p-2 rounded text-xs overflow-x-auto max-h-80">{result}</pre>
+              <pre className="bg-blue-50 border border-blue-200 p-4 rounded text-base text-blue-900 font-mono overflow-x-auto max-h-80 text-center shadow-inner">{result}</pre>
             )}
           </div>
         </div>

@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
 export default function SignInForm() {
@@ -8,6 +8,7 @@ export default function SignInForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const router = useRouter();
+  const { data: session, update } = useSession();
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -20,26 +21,45 @@ export default function SignInForm() {
     if (result?.error) {
       setError("Invalid username or password");
     } else {
-      router.push("/");
+      // Wait for session to update, then redirect
+      await update();
+      const userId = session?.user?.id;
+      if (userId) {
+        router.push(`/users/${userId}`);
+      } else {
+        router.push("/events"); // fallback
+      }
     }
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div>
-        <label>
-          Username:
-          <input value={username} onChange={e => setUsername(e.target.value)} required />
-        </label>
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full">
+      <div className="flex flex-col gap-1">
+        <label className="text-sm font-medium text-gray-700">Username</label>
+        <input
+          className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          value={username}
+          onChange={e => setUsername(e.target.value)}
+          required
+        />
       </div>
-      <div>
-        <label>
-          Password:
-          <input type="password" value={password} onChange={e => setPassword(e.target.value)} required />
-        </label>
+      <div className="flex flex-col gap-1">
+        <label className="text-sm font-medium text-gray-700">Password</label>
+        <input
+          type="password"
+          className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          value={password}
+          onChange={e => setPassword(e.target.value)}
+          required
+        />
       </div>
-      <button type="submit">Sign in</button>
-      {error && <div style={{ color: "red" }}>{error}</div>}
+      <button
+        type="submit"
+        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded transition"
+      >
+        Sign in
+      </button>
+      {error && <div className="text-red-500 text-sm text-center">{error}</div>}
     </form>
   );
 }
