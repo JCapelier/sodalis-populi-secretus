@@ -64,11 +64,12 @@ const InviteParticipantsField: React.FC<InviteParticipantsFieldProps> = ({ onInv
 				onFocus={() => setShowSuggestions(suggestions.length > 0)}
 				onBlur={handleBlur}
 				placeholder="Enter username to invite"
-				className="border rounded px-2 py-1 w-full"
+				className="border border-gray-400 rounded px-2 py-1 w-full text-black bg-white font-normal"
+				style={{ minWidth: '0' }}
 				autoComplete="off"
 			/>
 			{showSuggestions && (
-				<ul className="absolute z-10 bg-white border rounded w-full mt-1 max-h-40 overflow-y-auto shadow">
+				<ul className="absolute z-10 bg-white border border-gray-400 rounded w-full mt-1 max-h-40 overflow-y-auto shadow text-black font-normal">
 					{suggestions.length > 0 ? (
 						suggestions.map((user) => (
 							<li

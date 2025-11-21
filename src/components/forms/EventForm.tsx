@@ -11,9 +11,10 @@ export type ParticipantFormEntry = { user_id: number; username: string; status?:
 
 interface EventFormProps {
   idString?: string | null;
+  onSuccess?: () => void;
 }
 
-export default function EventForm({ idString }: EventFormProps) {
+export default function EventForm({ idString, onSuccess }: EventFormProps) {
   const [name, setName] = useState("");
   const [endsAt, setEndsAt] = useState("");
   const [priceLimit, setPriceLimit] = useState("");
@@ -84,6 +85,7 @@ export default function EventForm({ idString }: EventFormProps) {
       setError(formData.error || (isEdit ? 'Failed to update event' : 'Failed to create event'));
     } else {
       setSuccess(isEdit ? 'Event updated!' : 'Event created!');
+      if (onSuccess) onSuccess();
       if (!isEdit) {
         setName("");
         setEndsAt("");
@@ -97,60 +99,67 @@ export default function EventForm({ idString }: EventFormProps) {
     <>
       <form onSubmit={handleSubmit}>
         <div>
-          <label>
+          <label className="block text-black font-semibold mb-1">
             Event name:
-            <input value={name} onChange={event => setName(event.target.value)} required />
+            <input value={name} onChange={event => setName(event.target.value)} required className="block w-full border border-gray-400 rounded px-2 py-1 mt-1 text-black bg-white" style={{ minWidth: '0' }} />
           </label>
         </div>
         <div>
-          <label>
+          <label className="block text-black font-semibold mb-1">
             Ends at (date):
-            <input type="date" value={endsAt || ""} onChange={event => setEndsAt(event.target.value)} />
+            <input type="date" value={endsAt || ""} onChange={event => setEndsAt(event.target.value)} className="block w-full border border-gray-400 rounded px-2 py-1 mt-1 text-black bg-white" style={{ minWidth: '0' }} />
           </label>
         </div>
         <div>
-          <label>
+          <label className="block text-black font-semibold mb-1">
             Price limit (€):
-            <input type="number" min="0" step="0.01" value={priceLimit} onChange={event => setPriceLimit(event.target.value)} />
+            <input type="number" min="0" step="0.01" value={priceLimit} onChange={event => setPriceLimit(event.target.value)} className="block w-full border border-gray-400 rounded px-2 py-1 mt-1 text-black bg-white" style={{ minWidth: '0' }} />
           </label>
         </div>
         <InviteParticipantsField
           onInvite={user => {
             if (!invited.some(u => u.user_id === user.user_id)) setInvited([...invited, user]);
           }}
+          inputClassName="border border-gray-400 rounded px-2 py-1 mt-1 text-black bg-white w-full"
         />
-        {invited.length > 0 && (
-          <div className="mt-2">
-            <div className="font-semibold mb-1">Invited participants:</div>
-            <ul className="list-disc ml-6">
-              {invited.map(u => (
-                <li key={u.user_id} className="flex items-center gap-2">
+        <div className="mt-2 min-h-[70px]">
+          <div className="font-semibold mb-1 text-black">Invited participants:</div>
+          <ul className="list-disc ml-6 w-full">
+            {invited.length > 0 ? (
+              invited.map(u => (
+                <li key={u.user_id} className="flex items-center gap-2 text-black w-full">
                   <span>{u.username}</span>
                   <button
                     type="button"
                     aria-label={`Remove ${u.username}`}
-                    className="text-red-500 hover:text-red-700 ml-2"
+                    className="text-red-600 hover:text-red-800 ml-2 font-bold"
                     onClick={() => setInvited(invited.filter(p => p.user_id !== u.user_id))}
                   >
                     &#10005;
                   </button>
                 </li>
-              ))}
-            </ul>
+              ))
+            ) : (
+              <li className="text-gray-400">No participants yet.</li>
+            )}
+          </ul>
+        </div>
+        <div className="w-full min-h-[110px] flex flex-col justify-end">
+          <div className={invited.length >= 2 ? "" : "pointer-events-none opacity-60"}>
+            <ExclusionsManager
+              participants={invited}
+              exclusions={exclusions}
+              setExclusions={setExclusions}
+            />
           </div>
-        )}
-        {invited.length >= 2 && (
-          <ExclusionsManager
-            participants={invited}
-            exclusions={exclusions}
-            setExclusions={setExclusions}
-          />
-        )}
-        <button type="submit">{isEdit ? 'Update Event' : 'Create Event'}</button>
-        {error && <div style={{ color: 'red' }}>{error}</div>}
-        {success && <div style={{ color: 'green' }}>{success}</div>}
+          {invited.length < 2 && (
+            <div className="text-gray-400 mt-2">Add at least 2 participants to set exclusions.</div>
+          )}
+        </div>
+        <button type="submit" className="mt-4 px-4 py-2 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700 w-full">{isEdit ? 'Update Event' : 'Create Event'}</button>
+        {error && <div className="text-red-600 font-semibold mt-2">{error}</div>}
+        {success && <div className="text-green-600 font-semibold mt-2">{success}</div>}
       </form>
-      <Link href='/events'>Back to index</Link>
     </>
   );
 }

@@ -15,9 +15,6 @@ const DraftButton: React.FC<DraftButtonProps> = ({ eventId, currentUserId }) => 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { data: session } = useSession();
-  console.log(currentUserId)
-
-
 
   const handleDraft = async () => {
     setLoading(true);

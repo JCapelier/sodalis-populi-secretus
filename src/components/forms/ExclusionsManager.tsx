@@ -47,10 +47,10 @@ const ExclusionsManager: React.FC<ExclusionsManagerProps> = ({ participants, exc
 
   return (
     <div className="mt-4">
-      <div className="font-semibold mb-2">Exclusions</div>
+      <div className="mb-2 text-black">Exclusions</div>
       {exclusions.map((ex, idx) => (
         <div key={idx} className="flex items-center gap-2 mb-1">
-          <span>
+          <span className="text-black">
             {participants.find(p => p.user_id === ex.user_id)?.username || "?"} cannot draw {participants.find(p => p.user_id === ex.excluded_user_id)?.username || "?"}
           </span>
           <input
@@ -75,23 +75,27 @@ const ExclusionsManager: React.FC<ExclusionsManagerProps> = ({ participants, exc
         <select
           value={newExclusion.user_id}
           onChange={e => setNewExclusion({ ...newExclusion, user_id: Number(e.target.value) })}
+          className="border border-gray-400 rounded px-2 py-1 text-black bg-white font-normal w-full"
+          style={{ minWidth: '0' }}
         >
           <option value={0}>Select participant</option>
           {participants.map(p => (
             <option key={p.user_id} value={p.user_id}>{p.username}</option>
           ))}
         </select>
-        <span>can&apos;t draw</span>
+        <span className="text-black font-normal">can&apos;t draw</span>
         <select
           value={newExclusion.excluded_user_id}
           onChange={e => setNewExclusion({ ...newExclusion, excluded_user_id: Number(e.target.value) })}
+          className="border border-gray-400 rounded px-2 py-1 text-black bg-white font-normal w-full"
+          style={{ minWidth: '0' }}
         >
           <option value={0}>Select participant</option>
           {participants.map(p => (
             <option key={p.user_id} value={p.user_id}>{p.username}</option>
           ))}
         </select>
-        <label className="flex items-center gap-1 ml-2">
+        <label className="flex items-center gap-1 ml-2 text-black font-normal">
           <input
             type="checkbox"
             checked={!!newExclusion.reciprocal}
@@ -99,7 +103,7 @@ const ExclusionsManager: React.FC<ExclusionsManagerProps> = ({ participants, exc
           />
           <span className="text-xs">reciprocal</span>
         </label>
-        <button type="button" className="ml-2 px-2 py-1 bg-blue-500 text-white rounded" onClick={handleAdd}>
+        <button type="button" className="ml-2 px-2 py-1 bg-blue-500 text-white rounded font-normal w-full" style={{ minWidth: '0' }} onClick={handleAdd}>
           Add
         </button>
       </div>
