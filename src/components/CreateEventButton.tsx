@@ -1,9 +1,12 @@
 'use client';
+
 import React, { useState } from "react";
 import EventForm from "./forms/EventForm";
+import { useRouter } from "next/navigation";
 
 const CreateEventButton: React.FC = () => {
   const [open, setOpen] = useState(false);
+  const router = useRouter();
 
   return (
     <>
@@ -24,7 +27,10 @@ const CreateEventButton: React.FC = () => {
               <span className="font-semibold text-lg text-blue-800">Create Event</span>
               <button onClick={() => setOpen(false)} className="text-gray-500 hover:text-black text-2xl font-bold px-2">&times;</button>
             </div>
-            <EventForm />
+            <EventForm onSuccess={() => {
+              setOpen(false);
+              router.refresh();
+            }} />
           </div>
         </div>
       )}

@@ -11,9 +11,10 @@ export type ParticipantFormEntry = { user_id: number; username: string; status?:
 
 interface EventFormProps {
   idString?: string | null;
+  onSuccess?: () => void;
 }
 
-export default function EventForm({ idString }: EventFormProps) {
+export default function EventForm({ idString, onSuccess }: EventFormProps) {
   const [name, setName] = useState("");
   const [endsAt, setEndsAt] = useState("");
   const [priceLimit, setPriceLimit] = useState("");
@@ -84,6 +85,7 @@ export default function EventForm({ idString }: EventFormProps) {
       setError(formData.error || (isEdit ? 'Failed to update event' : 'Failed to create event'));
     } else {
       setSuccess(isEdit ? 'Event updated!' : 'Event created!');
+      if (onSuccess) onSuccess();
       if (!isEdit) {
         setName("");
         setEndsAt("");
