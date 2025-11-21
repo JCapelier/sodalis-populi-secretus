@@ -1,6 +1,7 @@
 import React from "react";
 import Dashboard from "@/components/Dashboard";
 import EventsIndex from "@/components/EventsIndex";
+import CreateEventButton from "@/components/CreateEventButton";
 import { getEventInfo, query } from "@/lib/db";
 import { EventInfo, Event as EventType } from "@/type";
 
@@ -39,6 +40,9 @@ export default async function UserDashboardPage({ params }: Props) {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <Dashboard />
+      <div className="w-full max-w-3xl mx-auto flex flex-col items-center my-8">
+        <CreateEventButton />
+      </div>
       <EventsIndex
         managedEvents={fullManagedEvents}
         participatingEvents={fullParticipatingEvents}

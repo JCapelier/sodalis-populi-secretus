@@ -1,5 +1,6 @@
 'use client';
 import React from "react";
+import CreateEventButton from "./CreateEventButton";
 import { useSession } from "next-auth/react";
 
 const Dashboard: React.FC = () => {
