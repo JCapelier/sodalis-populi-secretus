@@ -8,7 +8,6 @@ export async function GET(request: Request, context: {params: {id: number}}) {
   const { searchParams } = new URL(request.url);
   const userIdString = searchParams.get('userId');
   const userId = userIdString ? Number(userIdString) : undefined;
-    console.log('API DEBUG userId:', userId, typeof userId, 'eventId:', eventId, typeof eventId);
 
   try {
     const myPairingQuery = `SELECT receiver_id FROM pairings WHERE giver_id = $1 AND event_id = $2`;
@@ -26,7 +25,6 @@ export async function GET(request: Request, context: {params: {id: number}}) {
     }
 
     const username = myReceiver.rows?.[0]?.username;
-    console.log('API DEBUG username:', username);
     return NextResponse.json({ username });
   } catch (error) {
     console.error('Fetching receiver username failed', error);

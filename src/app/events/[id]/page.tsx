@@ -9,7 +9,6 @@ async function fetchEvent(eventId: number) {
 
   const result = await query(fetchEventByIdQuery, [eventId]);
   if (!result) {
-    console.log('Fetching failed')
     return;
   } else {
     return result.rows[0];
@@ -21,7 +20,6 @@ async function fetchUsernameByUserId(userId: number) {
   const result = await query(fetchUsernameByUserIdQuery, [userId]);
 
   if (!result) {
-    console.log('Failed fetching username by user id');
     return;
   } else {
     return result.rows[0];
@@ -32,7 +30,6 @@ async function fetchEventParticipants(eventId: number) {
 
   const result = await query(fetchEventParticipantsQuery, [eventId]);
   if (!result) {
-    console.log('Fetching participants failed');
     return;
   } else {
     return Promise.all(

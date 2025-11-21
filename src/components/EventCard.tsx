@@ -1,5 +1,7 @@
+import React, { useState } from "react";
 import EditEventButton from "./EditEventButton";
 import DraftButton from "./DraftButton";
+import { Exclusion, Participant } from "@/type";
 
 interface EventCardProps {
   name: string;
@@ -8,22 +10,53 @@ interface EventCardProps {
   adminName?: string;
   eventId: number;
   adminId: number;
-  currentUserId: number
+  currentUserId: number;
+  eventParticipants?: Participant[];
+  eventExclusions?: (Exclusion & { giverUsername?: string; receiverUsername?: string })[];
 }
 
-export default function EventCard({ name, endsAt, priceLimitCents, adminName, eventId, adminId, currentUserId }: EventCardProps) {
+export default function EventCard({ name, endsAt, priceLimitCents, adminName, eventId, adminId, currentUserId, eventParticipants = [], eventExclusions = [] }: EventCardProps) {
+  const [open, setOpen] = useState(false);
+
   return (
-    <div style={{ border: "1px solid #ccc", borderRadius: 8, padding: 16, marginBottom: 16, position: 'relative', minHeight: 120 }}>
-      <h2>{name}</h2>
-      {adminName && <div><strong>Admin:</strong> {adminName}</div>}
-      {endsAt && <div><strong>Ends at:</strong> {endsAt}</div>}
-      {priceLimitCents !== undefined && priceLimitCents !== null && (
-        <div><strong>Price limit:</strong> €{(priceLimitCents / 100).toFixed(2)}</div>
-      )}
-      <div style={{ position: 'absolute', bottom: 16, right: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {Number(currentUserId) === Number(adminId) && <EditEventButton eventId={eventId} />}
-        <DraftButton eventId={eventId} currentUserId={currentUserId} />
+    <div className="bg-white border border-gray-400 rounded-xl p-5 mb-4 shadow-md">
+      <div className="flex items-center justify-between cursor-pointer" onClick={() => setOpen(o => !o)}>
+        <h2 className="text-lg font-bold text-gray-900 mb-0">{name}</h2>
+        <button className="ml-2 px-3 py-1 rounded bg-gray-200 text-gray-800 text-xs font-semibold shadow-sm border border-gray-300">
+          {open ? 'Hide' : 'Show'}
+        </button>
       </div>
+      {open && (
+        <div className="mt-4 space-y-2">
+          {adminName && <div className="text-gray-700"><strong>Admin:</strong> {adminName}</div>}
+          {endsAt && (
+            <div className="text-gray-700">
+              <strong>Ends at:</strong> {typeof endsAt === 'string' ? endsAt.slice(0, 10) : endsAt}
+            </div>
+          )}
+          {priceLimitCents !== undefined && priceLimitCents !== null && (
+            <div className="text-gray-700"><strong>Price limit:</strong> {Number.isInteger(priceLimitCents / 100) ? (priceLimitCents / 100).toFixed(0) : (priceLimitCents / 100).toFixed(2)}€</div>
+          )}
+          {eventParticipants.length > 0 && (
+            <div className="text-gray-700"><strong>Participants:</strong> {eventParticipants.map(p => p.username).join(", ")}</div>
+          )}
+          {eventExclusions.length > 0 && (
+            <div className="text-gray-700"><strong>Exclusions:</strong>
+              <ul className="list-disc ml-6">
+                {eventExclusions.map((ex, i) => (
+                  <li key={i}>
+                    {(ex.giverUsername || ex.user_id) + " cannot draw " + (ex.receiverUsername || ex.excluded_user_id)}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          <div className="flex gap-2 mt-4">
+            {Number(currentUserId) === Number(adminId) && <EditEventButton eventId={eventId} />}
+            <DraftButton eventId={eventId} currentUserId={currentUserId} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

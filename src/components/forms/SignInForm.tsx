@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
 export default function SignInForm() {
@@ -8,6 +8,7 @@ export default function SignInForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const router = useRouter();
+  const { data: session, update } = useSession();
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -20,7 +21,14 @@ export default function SignInForm() {
     if (result?.error) {
       setError("Invalid username or password");
     } else {
-      router.push("/events");
+      // Wait for session to update, then redirect
+      await update();
+      const userId = session?.user?.id;
+      if (userId) {
+        router.push(`/users/${userId}`);
+      } else {
+        router.push("/events"); // fallback
+      }
     }
   }
 

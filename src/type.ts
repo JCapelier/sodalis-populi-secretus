@@ -10,6 +10,7 @@ declare module "next-auth" {
       name?: string | null;
       email?: string | null;
       image?: string | null;
+      username?: string | null;
     };
   }
 }
@@ -53,3 +54,9 @@ export type EventParticipantFull = {
 export type Exclusion = { user_id: number; excluded_user_id: number };
 export type Participant = { user_id: number; username: string };
 export type Pairing = { giver_id: number; receiver_id: number}
+
+export interface EventInfo extends Event {
+  adminUsername: string;
+  participants: Participant[];
+  exclusions: Exclusion[];
+}
