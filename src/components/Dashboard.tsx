@@ -1,10 +1,12 @@
 'use client';
 import React from "react";
-import CreateEventButton from "./CreateEventButton";
 import { useSession } from "next-auth/react";
+import AddChildButton from "./AddChildButton";
 
 const Dashboard: React.FC = () => {
   const { data: session, status } = useSession();
+  const username = session?.user?.username;
+  const userId = session?.user?.id ? session.user.id : null;
 
   if (status === "loading") {
     return (
@@ -14,14 +16,12 @@ const Dashboard: React.FC = () => {
     );
   }
 
-  const username = session?.user?.username || session?.user?.name;
-
   return (
     <div className="w-full max-w-3xl mx-auto mt-8 p-6 bg-white rounded shadow border-2 border-blue-500">
       <h2 className="text-2xl font-bold mb-2 text-gray-900">
         Welcome, <span className="text-blue-700 font-extrabold">{username || "Unknown user"}</span>
       </h2>
-      {/* TODO: Add children management UI here */}
+      <AddChildButton userId={userId ? Number(userId) : null} />
       <div className="text-gray-700 text-sm mb-4 font-medium">(Children management coming soon)</div>
     </div>
   );
