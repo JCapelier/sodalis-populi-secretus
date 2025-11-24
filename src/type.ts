@@ -51,9 +51,9 @@ export type EventParticipantFull = {
   status: Status;
 }
 
-export type Exclusion = { user_id: number; excluded_user_id: number };
-export type Participant = { user_id: number; username: string };
-export type Pairing = { giver_id: number; receiver_id: number}
+export type Exclusion = { invitee_id: number; invitee_type: 'child' | 'user', excluded_invitee_id: number; excluded_invitee_type: 'child' | 'user', };
+export type Participant = { invitee_id: number; type: 'child' | 'user', username: string };
+export type Pairing = { giver_id: number; giver_type: 'child' | 'user', receiver_id: number; receiver_type: 'child' | 'user',}
 
 export interface EventInfo extends Event {
   adminUsername: string;

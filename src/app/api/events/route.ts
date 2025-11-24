@@ -30,32 +30,41 @@ export async function POST(request: Readonly<Request>) {
     ]);
 
     const eventId = eventResult.rows[0].id;
-    const insertParticipantQuery = `INSERT INTO event_participants (user_id, event_id, status) VALUES ($1, $2, $3)`;
+    const insertParticipantQuery = `INSERT INTO event_participants (invitee_id, event_id, type) VALUES ($1, $2, $3)`;
     for (const participant of participants) {
-      await query(insertParticipantQuery, [participant.user_id, eventId, 'invited'])
+      await query(insertParticipantQuery, [participant.invitee_id, eventId, participant.type])
     }
+    console.log(`Participants: ${participants}`)
 
-    const insertExclusionQuery = `INSERT INTO exclusions (event_id, user_id, excluded_user_id) VALUES ($1, $2, $3)`;
+    const insertExclusionQuery = `INSERT INTO exclusions (event_id, invitee_id, invitee_type, excluded_invitee_id, excluded_invitee_type) VALUES ($1, $2, $3, $4, $5)`;
     // To avoid duplicate reciprocal insertions, keep a Set of processed pairs
     const exclusionPairs = new Set();
     for (const exclusion of exclusions) {
-      const key = `${exclusion.user_id}:${exclusion.excluded_user_id}`;
-      const reverseKey = `${exclusion.excluded_user_id}:${exclusion.user_id}`;
+      const key = `${exclusion.invitee_id}:${exclusion.excluded_invitee_id}`;
+      const reverseKey = `${exclusion.excluded_invitee_id}:${exclusion.invitee_id}`;
       if (!exclusionPairs.has(key)) {
-        await query(insertExclusionQuery, [eventId, exclusion.user_id, exclusion.excluded_user_id]);
+        await query(insertExclusionQuery, [eventId, exclusion.invitee_id, exclusion.invitee_type, exclusion.excluded_invitee_id, exclusion.excluded_invitee_type]);
         exclusionPairs.add(key);
       }
       if (exclusion.reciprocal && !exclusionPairs.has(reverseKey)) {
-        await query(insertExclusionQuery, [eventId, exclusion.excluded_user_id, exclusion.user_id]);
+        await query(insertExclusionQuery, [eventId, exclusion.excluded_invitee_id, exclusion.invitee_type, exclusion.invitee_id, exclusion.excluded_invitee_type]);
         exclusionPairs.add(reverseKey);
       }
     }
 
-    if (!hasValidAssignment(participants, exclusions)) {
+
+    // Map participants to {id, type, username} for assignment logic
+    const assignmentParticipants = participants.map((p: any) => ({
+      id: p.invitee_id,
+      type: p.type,
+      username: p.username,
+    }));
+
+    if (!hasValidAssignment(assignmentParticipants, exclusions)) {
       return NextResponse.json({ error: "No valid assignment possible with these exclusions." }, { status: 400 });
     }
 
-    await runDraft(eventId, participants, exclusions);
+    await runDraft(eventId, assignmentParticipants, exclusions);
 
     return NextResponse.json({ event: eventResult.rows[0] }, { status: 201 });
   } catch (error) {

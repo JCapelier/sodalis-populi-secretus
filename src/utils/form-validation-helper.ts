@@ -1,4 +1,6 @@
-import { Exclusion, Participant } from "@/type";
+// Use the same types as in draft-helper.ts
+export type Participant = { id: number; username: string; type: 'user' | 'child' };
+export type Exclusion = { invitee_id: number; invitee_type: 'user' | 'child'; excluded_invitee_id: number; excluded_invitee_type: 'user' | 'child' };
 
 export function validateSignUp({
   username,
@@ -40,30 +42,55 @@ export function hasValidAssignment(
   exclusions: Exclusion[]
 ): boolean {
   const n = participants.length;
-  const ids = participants.map(p => p.user_id);
+  // Use array of {id, type} for uniqueness
+  const ids = participants.map(p => ({ id: p.id, type: p.type }));
 
-  // Build exclusion map: user_id -> Set of forbidden user_ids (including self)
-  const exclusionMap = new Map<number, Set<number>>();
+  // Build exclusion map: {id, type} -> Set of forbidden {id, type} (including self)
+  function key(obj: { id: number; type: string }) {
+    return `${obj.id}:${obj.type}`;
+  }
+  const exclusionMap = new Map<string, Set<string>>();
   for (const p of participants) {
-    exclusionMap.set(p.user_id, new Set([p.user_id]));
+    exclusionMap.set(key(p), new Set([key(p)]));
   }
   for (const ex of exclusions) {
-    exclusionMap.get(ex.user_id)?.add(ex.excluded_user_id);
+    const from = `${ex.invitee_id}:${ex.invitee_type}`;
+    const to = `${ex.excluded_invitee_id}:${ex.excluded_invitee_type}`;
+    exclusionMap.get(from)?.add(to);
+  }
+
+  // Debug: print exclusion map
+  if (typeof console !== 'undefined') {
+    console.log('Secret Santa assignment debug:');
+    console.log('Participants:', ids);
+    console.log('Exclusions:', exclusions);
+    for (const [from, tos] of exclusionMap.entries()) {
+      console.log(`Cannot assign from ${from} to:`, Array.from(tos));
+    }
   }
 
   // Backtracking: try to assign each giver to a receiver
-  function backtrack(giverIdx: number, used: Set<number>): boolean {
+  function backtrack(giverIdx: number, used: Set<string>): boolean {
     if (giverIdx === n) return true; // All assigned
     const giver = ids[giverIdx];
     for (const receiver of ids) {
-      if (!used.has(receiver) && !exclusionMap.get(giver)?.has(receiver)) {
-        used.add(receiver);
+      const receiverKey = key(receiver);
+      if (!used.has(receiverKey) && !exclusionMap.get(key(giver))?.has(receiverKey)) {
+        used.add(receiverKey);
         if (backtrack(giverIdx + 1, used)) return true;
-        used.delete(receiver);
+        used.delete(receiverKey);
       }
+    }
+    // Debug: log failed assignment for this giver
+    if (typeof console !== 'undefined') {
+      console.warn(`No valid receiver for giver ${key(giver)} at position ${giverIdx}`);
     }
     return false;
   }
 
-  return backtrack(0, new Set());
+  const result = backtrack(0, new Set());
+  if (!result && typeof console !== 'undefined') {
+    console.error('No valid Secret Santa assignment possible with current exclusions and participants.');
+  }
+  return result;
 }

@@ -1,6 +1,5 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import { ParticipantFormEntry } from "./EventForm";
-import { getParentsNames } from "@/lib/api";
 
 
 type InviteParticipantsFieldProps = {
@@ -42,7 +41,6 @@ const InviteParticipantsField: React.FC<InviteParticipantsFieldProps> = ({ onInv
 					try {
 						const res = await fetch(`/api/children/${child.id}/parents`);
 						const parentData = await res.json();
-            console.log(parentData)
 						if (parentData.parent && parentData.otherParent) {
 							return [child.id, `${parentData.parent.username} & ${parentData.otherParent.username}`];
 						} else if (parentData.parent) {
@@ -69,11 +67,16 @@ const InviteParticipantsField: React.FC<InviteParticipantsFieldProps> = ({ onInv
 	};
 
 	// Handle selecting a suggestion
-	const handleSelect = (user: ParticipantFormEntry) => {
+	const handleSelect = (user: any) => {
 		setUsername('');
 		setSuggestions([]);
 		setShowSuggestions(false);
-		onInvite(user);
+		// Map API result to correct structure
+		onInvite({
+			invitee_id: user.id,
+			username: user.username,
+			type: user.type,
+		});
 	};
 
 	// Hide suggestions when input loses focus (with a slight delay for click)
@@ -81,9 +84,8 @@ const InviteParticipantsField: React.FC<InviteParticipantsFieldProps> = ({ onInv
 		setTimeout(() => setShowSuggestions(false), 100);
 	};
 
-
 	return (
-    <div className="relative mt-4">
+		<div className="relative mt-4">
 			<input
 				ref={inputRef}
 				type="text"
@@ -92,7 +94,7 @@ const InviteParticipantsField: React.FC<InviteParticipantsFieldProps> = ({ onInv
 				onFocus={() => setShowSuggestions(suggestions.length > 0)}
 				onBlur={handleBlur}
 				placeholder="Enter username to invite"
-				className="border rounded px-2 py-1 w-full"
+				className="border rounded px-2 py-1 w-full text-black"
 				autoComplete="off"
 			/>
 			{showSuggestions && (
@@ -100,13 +102,17 @@ const InviteParticipantsField: React.FC<InviteParticipantsFieldProps> = ({ onInv
 						{suggestions.length > 0 ? (
 							suggestions.map((invitee) => (
 								<li
-									key={`${invitee.type}-${invitee.id}`}
-									className="px-3 py-2 cursor-pointer hover:bg-blue-100"
+									key={
+										invitee && invitee.id !== undefined && invitee.type
+											? `${invitee.type}-${invitee.id}`
+											: `${invitee.id}`
+									}
+									className="px-3 py-2 cursor-pointer hover:bg-blue-100 text-black"
 									onMouseDown={() => handleSelect(invitee)}
 								>
-									{invitee.type === 'user'
+									{ !invitee.type || invitee.type === 'user'
 										? invitee.username
-										: `${invitee.username} (child of ${parentNames[invitee.id] || '...'})`}
+										: `${invitee.username} (child of ${parentNames[invitee.invitee_id] || '...'})`}
 								</li>
 							))
 						) : (

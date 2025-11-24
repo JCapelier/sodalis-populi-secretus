@@ -17,7 +17,6 @@ interface EventCardProps {
 
 export default function EventCard({ name, endsAt, priceLimitCents, adminName, eventId, adminId, currentUserId, eventParticipants = [], eventExclusions = [] }: EventCardProps) {
   const [open, setOpen] = useState(false);
-
   return (
     <div className="bg-white border border-gray-400 rounded-xl p-5 mb-4 shadow-md">
       <div className="flex items-center justify-between cursor-pointer" onClick={() => setOpen(o => !o)}>

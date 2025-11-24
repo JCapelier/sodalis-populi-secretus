@@ -1,13 +1,11 @@
 'use client';
-import { Event, Status } from "@/type";
-import Link from "next/link";
+import { Event, Exclusion, Participant, Status } from "@/type";
 import { useState, useEffect } from "react";
 import ExclusionsManager from "./ExclusionsManager";
 import InviteParticipantsField from "./InviteParticipantsField";
 import { apiGet } from "@/lib/api";
 import { useSession } from "next-auth/react";
 
-export type ParticipantFormEntry = { id: number; username: string; type: 'user' | 'child' };
 
 interface EventFormProps {
   idString?: string | null;
@@ -19,8 +17,8 @@ export default function EventForm({ idString }: EventFormProps) {
   const [priceLimit, setPriceLimit] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [invited, setInvited] = useState<ParticipantFormEntry[]>([]);
-  const [exclusions, setExclusions] = useState<{ user_id: number; excluded_user_id: number }[]>([]);
+  const [invited, setInvited] = useState<Participant[]>([]);
+  const [exclusions, setExclusions] = useState<Exclusion[]>([]);
   const { data: session } = useSession();
   const eventId = idString ? Number(idString) : undefined;
   const isEdit = !!eventId;
@@ -38,8 +36,8 @@ export default function EventForm({ idString }: EventFormProps) {
         : ""
       );
     });
-    apiGet<ParticipantFormEntry[]>(`/api/event-participants/by-event-id?event-id=${eventId}`).then(setInvited);
-    apiGet<{ user_id: number; excluded_user_id: number }[]>(`/api/exclusions/by-event-id?event-id=${eventId}`).then(setExclusions);
+    apiGet<Participant[]>(`/api/event-participants/by-event-id?event-id=${eventId}`).then(setInvited);
+    apiGet<Exclusion[]>(`/api/exclusions/by-event-id?event-id=${eventId}`).then(setExclusions);
   }, [eventId, isEdit]);
 
   if (!(session && session.user && session.user.id)) {
@@ -116,7 +114,7 @@ export default function EventForm({ idString }: EventFormProps) {
         </div>
         <InviteParticipantsField
           onInvite={user => {
-            if (!invited.some(invitee => invitee.id === user.id && invitee.type === user.type )) {setInvited([...invited, user])} ;
+            if (!invited.some(invitee => invitee.invitee_id === user.invitee_id && invitee.type === user.type )) {setInvited([...invited, user])} ;
           }}
           searchEndPoint="/api/autocomplete/invitees"
           inputClassName="border border-gray-400 rounded px-2 py-1 mt-1 text-black bg-white"
@@ -124,14 +122,14 @@ export default function EventForm({ idString }: EventFormProps) {
         <div className="mt-2">
           <div className="font-semibold mb-1 text-black">Invited participants:</div>
           <ul className="list-disc ml-6 min-h-[1.5em]">
-            {invited.map(u => (
-              <li key={u.id} className="flex items-center gap-2 text-black">
-                <span>{u.username}</span>
+            {invited.map(invitee => (
+              <li key={invitee.type ? `${invitee.type}-${invitee.invitee_id}` : `${invitee.invitee_id}`} className="flex items-center gap-2 text-black">
+                <span>{invitee.username}</span>
                 <button
                   type="button"
-                  aria-label={`Remove ${u.username}`}
+                  aria-label={`Remove ${invitee.username}`}
                   className="text-red-600 hover:text-red-800 ml-2 font-bold"
-                  onClick={() => setInvited(invited.filter(p => p.id !== u.id))}
+                  onClick={() => setInvited(invited.filter(p => !(p.invitee_id === invitee.invitee_id && p.type === invitee.type)))}
                 >
                   &#10005;
                 </button>

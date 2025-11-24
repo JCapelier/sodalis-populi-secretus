@@ -24,7 +24,7 @@ export default async function UserDashboardPage({ params }: Props) {
   const participatingEventsResult = await query(
     `SELECT * FROM events e
      JOIN event_participants ep ON ep.event_id = e.id
-     WHERE ep.user_id = $1 AND e.admin_id != $1`,
+     WHERE ep.invitee_id = $1 AND e.admin_id != $1`,
     [userId]
   );
   const participatingEvents = participatingEventsResult.rows as EventType[];
