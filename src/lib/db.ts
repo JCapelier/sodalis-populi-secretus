@@ -1,5 +1,6 @@
 import { Event, EventInfo, Exclusion, Participant } from "@/type";
 import { Pool } from "pg";
+import { apiGet } from "./api";
 
 const connectionString = process.env.DATABASE_URL;
 

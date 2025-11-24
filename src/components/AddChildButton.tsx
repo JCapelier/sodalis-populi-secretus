@@ -73,6 +73,7 @@ const AddChildButton: React.FC<AddChildButtonProps> = ({ userId }) => {
                 Other Parent (optional):
                 <InviteParticipantsField
                   onInvite={user => setOtherParent(user)}
+                  searchEndPoint="/api/autocomplete"
                 />
                 {otherParent && (
                   <div className="text-sm text-gray-700 mt-1">Selected: {otherParent.username}</div>

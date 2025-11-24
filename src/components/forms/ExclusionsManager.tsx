@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import type { ParticipantFormEntry } from "./EditEventForm";
+import type { ParticipantFormEntry } from "./EventForm";
 
 interface Exclusion {
   user_id: number;
@@ -47,11 +47,10 @@ const ExclusionsManager: React.FC<ExclusionsManagerProps> = ({ participants, exc
 
   return (
     <div className="mt-4">
-      <div className="mb-2 text-black">Exclusions</div>
       {exclusions.map((ex, idx) => (
         <div key={idx} className="flex items-center gap-2 mb-1">
           <span className="text-black">
-            {participants.find(p => p.user_id === ex.user_id)?.username || "?"} cannot draw {participants.find(p => p.user_id === ex.excluded_user_id)?.username || "?"}
+            {participants.find(p => p.id === ex.user_id)?.username || "?"} cannot draw {participants.find(p => p.id === ex.excluded_user_id)?.username || "?"}
           </span>
           <input
             type="checkbox"
@@ -80,7 +79,7 @@ const ExclusionsManager: React.FC<ExclusionsManagerProps> = ({ participants, exc
         >
           <option value={0}>Select participant</option>
           {participants.map(p => (
-            <option key={p.user_id} value={p.user_id}>{p.username}</option>
+            <option key={p.id} value={p.id}>{p.username}</option>
           ))}
         </select>
         <span className="text-black font-normal">can&apos;t draw</span>
@@ -92,7 +91,7 @@ const ExclusionsManager: React.FC<ExclusionsManagerProps> = ({ participants, exc
         >
           <option value={0}>Select participant</option>
           {participants.map(p => (
-            <option key={p.user_id} value={p.user_id}>{p.username}</option>
+            <option key={p.id} value={p.id}>{p.username}</option>
           ))}
         </select>
         <label className="flex items-center gap-1 ml-2 text-black font-normal">

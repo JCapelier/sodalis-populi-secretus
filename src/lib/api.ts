@@ -1,5 +1,3 @@
-// src/lib/api.ts
-
 export async function apiGet<T>(url: string): Promise<T> {
   const res = await fetch(url);
   if (!res.ok) throw new Error(await getError(res));
@@ -38,5 +36,21 @@ async function getError(res: Response): Promise<string> {
     return data.error || res.statusText;
   } catch {
     return res.statusText;
+  }
+}
+
+export type ParentResult = {
+  parent?: { id: number; username: string };
+  otherParent?: { id: number; username: string };
+};
+
+export async function getParentsNames(childId: number) {
+  const result = await apiGet(`/api/children/${childId}/parent`) as ParentResult;
+  if (result.otherParent) {
+    return `${result.parent?.username} & ${result.otherParent.username}`;
+  } else if (result.parent) {
+    return `${result.parent.username}`;
+  } else {
+    return "";
   }
 }

@@ -9,7 +9,7 @@ export async function POST(request: Request, context: { params: { id: string } }
   try {
     const body = await request.json();
     const result = await query(
-      `INSERT INTO children (name, parent_id, other_parent_id) VALUES ($1, $2, $3) RETURNING *`,
+      `INSERT INTO children (username, parent_id, other_parent_id) VALUES ($1, $2, $3) RETURNING *`,
       [body.name, parentId, body.other_parent_id || null]
     );
     if (!result.rows || !result.rows[0]) {
