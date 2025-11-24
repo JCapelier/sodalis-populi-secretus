@@ -1,8 +1,9 @@
 import { EventParticipantFull } from "@/type";
 import React from "react";
+import { ParticipantFormEntry } from "./forms/EventForm";
 
 type ParticipantsListProps = {
-	participants: {id, username, status}[];
+	participants: ParticipantFormEntry[];
 };
 
 const statusColors: Record<string, string> = {
@@ -18,8 +19,8 @@ export default function ParticipantsList({ participants }: ParticipantsListProps
 	return (
 		<ul className="participants-list divide-y divide-gray-200 mt-4">
 			{participants.map((participant) => (
-				<li key={participant.id} className="flex items-center py-2">
-					<span className="font-medium mr-2">{participant.user.username}</span>
+				<li key={participant.invitee_id} className="flex items-center py-2">
+					<span className="font-medium mr-2">{participant.username}</span>
 					{participant.status && (
 						<span className={`ml-2 px-2 py-1 rounded text-xs font-semibold ${statusColors[participant.status] || "bg-gray-200 text-gray-700"}`}>
 							{participant.status}

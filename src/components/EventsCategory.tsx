@@ -5,9 +5,10 @@ import type { EventInfo, Event as EventType, Participant } from "@/type";
 
 interface EventsCategoryProps {
   title: string;
-  color: "blue" | "green";
+  color: "blue" | "green" | 'purple';
   events: EventInfo[]; // adminId optional for now
   currentUserId?: number;
+  childDraft: {option: boolean, childId?: number};
 }
 
 const colorMap = {
@@ -17,11 +18,15 @@ const colorMap = {
   green: {
     bg: "bg-green-50",
   },
+  purple: {
+    bg: "bg-purple-50"
+  },
 };
 
-const EventsCategory: React.FC<EventsCategoryProps> = ({ title, color, events, currentUserId }) => {
+const EventsCategory: React.FC<EventsCategoryProps> = ({ title, color, events, currentUserId, childDraft }) => {
   const [open, setOpen] = useState(true);
   const c = colorMap[color];
+  console.log(events)
 
   return (
     <div className={`mb-8 rounded-xl p-6 shadow-md ${c.bg}`}>
@@ -48,6 +53,7 @@ const EventsCategory: React.FC<EventsCategoryProps> = ({ title, color, events, c
                   adminId={event.admin_id ?? 0}
                   endsAt={event.ends_at ? event.ends_at.toLocaleString() : undefined}
                   currentUserId={currentUserId ?? 0}
+                  childDraft={childDraft}
                 />
               </li>
             ))

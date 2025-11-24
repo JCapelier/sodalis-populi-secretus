@@ -7,9 +7,10 @@ import { Pairing } from "@/type";
 interface DraftButtonProps {
   eventId: number;
   currentUserId: number
+  childDraft: {option: boolean, childId?: number}
 }
 
-const DraftButton: React.FC<DraftButtonProps> = ({ eventId, currentUserId }) => {
+const DraftButton: React.FC<DraftButtonProps> = ({ eventId, currentUserId, childDraft }) => {
   const [open, setOpen] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -20,8 +21,10 @@ const DraftButton: React.FC<DraftButtonProps> = ({ eventId, currentUserId }) => 
     setLoading(true);
     setError(null);
     setResult(null);
+
     try {
-      const response = await apiGet<{ username: string }>(`/api/events/${eventId}/my-pairing?userId=${currentUserId}`);
+
+      const response = childDraft && childDraft.option ? await apiGet<{ username: string }>(`/api/events/${eventId}/my-pairing/children?childId=${childDraft.childId}`) : await apiGet<{ username: string }>(`/api/events/${eventId}/my-pairing/users?userId=${currentUserId}`);
       setResult(response?.username ?? null);
     } catch (e: unknown) {
       function isErrorWithMessage(error: unknown): error is { message: string } {

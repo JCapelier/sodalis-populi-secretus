@@ -1,3 +1,4 @@
+
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/db";
 
@@ -6,8 +7,14 @@ export async function GET(req: NextRequest) {
   if (!eventId) {
     return NextResponse.json({ error: "Missing event-id" }, { status: 400 });
   }
-  const exclusions = await query(
-    `SELECT user_id, excluded_user_id FROM exclusions WHERE event_id = $1`,
+  // Return all exclusion fields needed for the form (no reciprocal, it's frontend-only)
+  const exclusions = await query<{
+    invitee_id: number;
+    invitee_type: 'user' | 'child';
+    excluded_invitee_id: number;
+    excluded_invitee_type: 'user' | 'child';
+  }>(
+    `SELECT invitee_id, invitee_type, excluded_invitee_id, excluded_invitee_type FROM exclusions WHERE event_id = $1`,
     [eventId]
   );
   return NextResponse.json(exclusions.rows);

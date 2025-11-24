@@ -1,9 +1,11 @@
 import React, { useState } from "react";
-import type { ParticipantFormEntry } from "./EditEventForm";
+import type { ParticipantFormEntry } from "./EventForm";
 
 interface Exclusion {
-  user_id: number;
-  excluded_user_id: number;
+  invitee_id: number;
+  invitee_type: 'child' | 'user';
+  excluded_invitee_id: number;
+  excluded_invitee_type: 'child' | 'user';
   reciprocal?: boolean;
 }
 
@@ -14,24 +16,45 @@ interface ExclusionsManagerProps {
 }
 
 const ExclusionsManager: React.FC<ExclusionsManagerProps> = ({ participants, exclusions, setExclusions }) => {
-  const [newExclusion, setNewExclusion] = useState<Exclusion>({ user_id: 0, excluded_user_id: 0, reciprocal: true });
-
+  const [newExclusion, setNewExclusion] = useState<Exclusion>({ invitee_id: 0, invitee_type: 'user', excluded_invitee_id: 0, excluded_invitee_type: 'user', reciprocal: true });
   const handleAdd = () => {
     if (
-      newExclusion.user_id &&
-      newExclusion.excluded_user_id &&
-      newExclusion.user_id !== newExclusion.excluded_user_id &&
-      !exclusions.some(e => e.user_id === newExclusion.user_id && e.excluded_user_id === newExclusion.excluded_user_id)
+      newExclusion.invitee_id &&
+      newExclusion.excluded_invitee_id &&
+      // Check both id and type for self-exclusion
+      !(newExclusion.invitee_id === newExclusion.excluded_invitee_id && newExclusion.invitee_type === newExclusion.excluded_invitee_type) &&
+      // Check both id and type for uniqueness
+      !exclusions.some(e =>
+        e.invitee_id === newExclusion.invitee_id &&
+        e.invitee_type === newExclusion.invitee_type &&
+        e.excluded_invitee_id === newExclusion.excluded_invitee_id &&
+        e.excluded_invitee_type === newExclusion.excluded_invitee_type
+      )
     ) {
-      let newList = [...exclusions, { ...newExclusion, reciprocal: !!newExclusion.reciprocal }];
+      // Find types from participants
+      const invitee = participants.find(p => p.id === newExclusion.invitee_id && p.type === newExclusion.invitee_type);
+      const excluded = participants.find(p => p.id === newExclusion.excluded_invitee_id && p.type === newExclusion.excluded_invitee_type);
+      const exclusionToAdd = {
+        ...newExclusion,
+        invitee_type: invitee?.type || 'user',
+        excluded_invitee_type: excluded?.type || 'user',
+        reciprocal: !!newExclusion.reciprocal
+      };
+      let newList = [...exclusions, exclusionToAdd];
       if (newExclusion.reciprocal) {
         // Add the reverse exclusion if not already present
-        if (!exclusions.some(e => e.user_id === newExclusion.excluded_user_id && e.excluded_user_id === newExclusion.user_id)) {
-          newList.push({ user_id: newExclusion.excluded_user_id, excluded_user_id: newExclusion.user_id, reciprocal: true });
+        if (!exclusions.some(e => e.invitee_id === newExclusion.excluded_invitee_id && e.invitee_type === (excluded?.type || 'user') && e.excluded_invitee_id === newExclusion.invitee_id && e.excluded_invitee_type === (invitee?.type || 'user'))) {
+          newList.push({
+            invitee_id: newExclusion.excluded_invitee_id,
+            invitee_type: excluded?.type || 'user',
+            excluded_invitee_id: newExclusion.invitee_id,
+            excluded_invitee_type: invitee?.type || 'user',
+            reciprocal: true
+          });
         }
       }
       setExclusions(newList);
-      setNewExclusion({ user_id: 0, excluded_user_id: 0, reciprocal: true });
+      setNewExclusion({ invitee_id: 0, invitee_type: 'user', excluded_invitee_id: 0, excluded_invitee_type: 'user', reciprocal: true });
     }
   };
 
@@ -40,18 +63,19 @@ const ExclusionsManager: React.FC<ExclusionsManagerProps> = ({ participants, exc
     let newList = exclusions.filter((_, i) => i !== index);
     // If reciprocal, remove the reverse as well
     if (ex.reciprocal) {
-      newList = newList.filter(e => !(e.user_id === ex.excluded_user_id && e.excluded_user_id === ex.user_id));
+      newList = newList.filter(e =>
+        !((e.invitee_id === ex.excluded_invitee_id && e.invitee_type === ex.excluded_invitee_type) &&
+         (e.excluded_invitee_id === ex.invitee_id && e.excluded_invitee_type === ex.invitee_type)));
     }
     setExclusions(newList);
   };
 
   return (
     <div className="mt-4">
-      <div className="mb-2 text-black">Exclusions</div>
       {exclusions.map((ex, idx) => (
-        <div key={idx} className="flex items-center gap-2 mb-1">
+        <div key={`${ex.invitee_type}-${ex.invitee_id}_x_${ex.excluded_invitee_type}-${ex.excluded_invitee_id}_${idx}`} className="flex items-center gap-2 mb-1">
           <span className="text-black">
-            {participants.find(p => p.user_id === ex.user_id)?.username || "?"} cannot draw {participants.find(p => p.user_id === ex.excluded_user_id)?.username || "?"}
+            {participants.find(p => p.invitee_id === ex.invitee_id && p.type === ex.invitee_type)?.username || "?"} cannot draw {participants.find(p => p.invitee_id === ex.excluded_invitee_id && p.type === ex.excluded_invitee_type)?.username || "?"}
           </span>
           <input
             type="checkbox"
@@ -73,26 +97,36 @@ const ExclusionsManager: React.FC<ExclusionsManagerProps> = ({ participants, exc
       ))}
       <div className="flex items-center gap-2 mt-2">
         <select
-          value={newExclusion.user_id}
-          onChange={e => setNewExclusion({ ...newExclusion, user_id: Number(e.target.value) })}
+          value={newExclusion.invitee_id ? `${newExclusion.invitee_type}-${newExclusion.invitee_id}` : ''}
+          onChange={e => {
+            const [type, idStr] = e.target.value.split('-');
+            const id = Number(idStr);
+            const participant = participants.find(p => p.invitee_id === id && p.type === type);
+            setNewExclusion({ ...newExclusion, invitee_id: id, invitee_type: type as 'user' | 'child' });
+          }}
           className="border border-gray-400 rounded px-2 py-1 text-black bg-white font-normal w-full"
           style={{ minWidth: '0' }}
         >
-          <option value={0}>Select participant</option>
+          <option value="">Select participant</option>
           {participants.map(p => (
-            <option key={p.user_id} value={p.user_id}>{p.username}</option>
+            <option key={`${p.type}-${p.invitee_id}`} value={`${p.type}-${p.invitee_id}`}>{p.username}</option>
           ))}
         </select>
         <span className="text-black font-normal">can&apos;t draw</span>
         <select
-          value={newExclusion.excluded_user_id}
-          onChange={e => setNewExclusion({ ...newExclusion, excluded_user_id: Number(e.target.value) })}
+          value={newExclusion.excluded_invitee_id ? `${newExclusion.excluded_invitee_type}-${newExclusion.excluded_invitee_id}` : ''}
+          onChange={e => {
+            const [type, idStr] = e.target.value.split('-');
+            const id = Number(idStr);
+            const participant = participants.find(p => p.invitee_id === id && p.type === type);
+            setNewExclusion({ ...newExclusion, excluded_invitee_id: id, excluded_invitee_type: type as 'user' | 'child' });
+          }}
           className="border border-gray-400 rounded px-2 py-1 text-black bg-white font-normal w-full"
           style={{ minWidth: '0' }}
         >
-          <option value={0}>Select participant</option>
+          <option value="">Select participant</option>
           {participants.map(p => (
-            <option key={p.user_id} value={p.user_id}>{p.username}</option>
+            <option key={`${p.type}-${p.invitee_id}`} value={`${p.type}-${p.invitee_id}`}>{p.username}</option>
           ))}
         </select>
         <label className="flex items-center gap-1 ml-2 text-black font-normal">

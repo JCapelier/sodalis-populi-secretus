@@ -19,4 +19,3 @@ export async function GET(request: Readonly<Request>) {
     return NextResponse.json({error: 'Internal server error'}, {status: 500})
   }
 }
-  

@@ -1,27 +1,24 @@
 'use client';
-import { Event, Status } from "@/type";
-import Link from "next/link";
+import { Event, Exclusion, Participant, Status } from "@/type";
 import { useState, useEffect } from "react";
 import ExclusionsManager from "./ExclusionsManager";
 import InviteParticipantsField from "./InviteParticipantsField";
 import { apiGet } from "@/lib/api";
 import { useSession } from "next-auth/react";
 
-export type ParticipantFormEntry = { user_id: number; username: string; status?: Status };
 
 interface EventFormProps {
   idString?: string | null;
-  onSuccess?: () => void;
 }
 
-export default function EventForm({ idString, onSuccess }: EventFormProps) {
+export default function EventForm({ idString }: EventFormProps) {
   const [name, setName] = useState("");
   const [endsAt, setEndsAt] = useState("");
   const [priceLimit, setPriceLimit] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [invited, setInvited] = useState<ParticipantFormEntry[]>([]);
-  const [exclusions, setExclusions] = useState<{ user_id: number; excluded_user_id: number }[]>([]);
+  const [invited, setInvited] = useState<Participant[]>([]);
+  const [exclusions, setExclusions] = useState<Exclusion[]>([]);
   const { data: session } = useSession();
   const eventId = idString ? Number(idString) : undefined;
   const isEdit = !!eventId;
@@ -39,8 +36,8 @@ export default function EventForm({ idString, onSuccess }: EventFormProps) {
         : ""
       );
     });
-    apiGet<ParticipantFormEntry[]>(`/api/event-participants/by-event-id?event-id=${eventId}`).then(setInvited);
-    apiGet<{ user_id: number; excluded_user_id: number }[]>(`/api/exclusions/by-event-id?event-id=${eventId}`).then(setExclusions);
+    apiGet<Participant[]>(`/api/event-participants/by-event-id?event-id=${eventId}`).then(setInvited);
+    apiGet<Exclusion[]>(`/api/exclusions/by-event-id?event-id=${eventId}`).then(setExclusions);
   }, [eventId, isEdit]);
 
   if (!(session && session.user && session.user.id)) {
@@ -85,7 +82,6 @@ export default function EventForm({ idString, onSuccess }: EventFormProps) {
       setError(formData.error || (isEdit ? 'Failed to update event' : 'Failed to create event'));
     } else {
       setSuccess(isEdit ? 'Event updated!' : 'Event created!');
-      if (onSuccess) onSuccess();
       if (!isEdit) {
         setName("");
         setEndsAt("");
@@ -101,62 +97,61 @@ export default function EventForm({ idString, onSuccess }: EventFormProps) {
         <div>
           <label className="block text-black font-semibold mb-1">
             Event name:
-            <input value={name} onChange={event => setName(event.target.value)} required className="block w-full border border-gray-400 rounded px-2 py-1 mt-1 text-black bg-white" style={{ minWidth: '0' }} />
+            <input value={name} onChange={event => setName(event.target.value)} required className="block w-full border border-gray-400 rounded px-2 py-1 mt-1 text-black bg-white" />
           </label>
         </div>
         <div>
           <label className="block text-black font-semibold mb-1">
             Ends at (date):
-            <input type="date" value={endsAt || ""} onChange={event => setEndsAt(event.target.value)} className="block w-full border border-gray-400 rounded px-2 py-1 mt-1 text-black bg-white" style={{ minWidth: '0' }} />
+            <input type="date" value={endsAt || ""} onChange={event => setEndsAt(event.target.value)} className="block w-full border border-gray-400 rounded px-2 py-1 mt-1 text-black bg-white" />
           </label>
         </div>
         <div>
           <label className="block text-black font-semibold mb-1">
             Price limit (€):
-            <input type="number" min="0" step="0.01" value={priceLimit} onChange={event => setPriceLimit(event.target.value)} className="block w-full border border-gray-400 rounded px-2 py-1 mt-1 text-black bg-white" style={{ minWidth: '0' }} />
+            <input type="number" min="0" step="0.01" value={priceLimit} onChange={event => setPriceLimit(event.target.value)} className="block w-full border border-gray-400 rounded px-2 py-1 mt-1 text-black bg-white" />
           </label>
         </div>
         <InviteParticipantsField
           onInvite={user => {
-            if (!invited.some(u => u.user_id === user.user_id)) setInvited([...invited, user]);
+            if (!invited.some(invitee => invitee.invitee_id === user.invitee_id && invitee.type === user.type )) {setInvited([...invited, user])} ;
           }}
-          inputClassName="border border-gray-400 rounded px-2 py-1 mt-1 text-black bg-white w-full"
+          searchEndPoint="/api/autocomplete/invitees"
+          inputClassName="border border-gray-400 rounded px-2 py-1 mt-1 text-black bg-white"
         />
-        <div className="mt-2 min-h-[70px]">
+        <div className="mt-2">
           <div className="font-semibold mb-1 text-black">Invited participants:</div>
-          <ul className="list-disc ml-6 w-full">
-            {invited.length > 0 ? (
-              invited.map(u => (
-                <li key={u.user_id} className="flex items-center gap-2 text-black w-full">
-                  <span>{u.username}</span>
-                  <button
-                    type="button"
-                    aria-label={`Remove ${u.username}`}
-                    className="text-red-600 hover:text-red-800 ml-2 font-bold"
-                    onClick={() => setInvited(invited.filter(p => p.user_id !== u.user_id))}
-                  >
-                    &#10005;
-                  </button>
-                </li>
-              ))
-            ) : (
-              <li className="text-gray-400">No participants yet.</li>
-            )}
+          <ul className="list-disc ml-6 min-h-[1.5em]">
+            {invited.map(invitee => (
+              <li key={invitee.type ? `${invitee.type}-${invitee.invitee_id}` : `${invitee.invitee_id}`} className="flex items-center gap-2 text-black">
+                <span>{invitee.username}</span>
+                <button
+                  type="button"
+                  aria-label={`Remove ${invitee.username}`}
+                  className="text-red-600 hover:text-red-800 ml-2 font-bold"
+                  onClick={() => setInvited(invited.filter(p => !(p.invitee_id === invitee.invitee_id && p.type === invitee.type)))}
+                >
+                  &#10005;
+                </button>
+              </li>
+            ))}
           </ul>
         </div>
-        <div className="w-full min-h-[110px] flex flex-col justify-end">
-          <div className={invited.length >= 2 ? "" : "pointer-events-none opacity-60"}>
+        <div className="mt-2">
+          <div className="font-semibold mb-1 text-black">Exclusions:</div>
+          <div>
             <ExclusionsManager
               participants={invited}
               exclusions={exclusions}
               setExclusions={setExclusions}
+              disabled={invited.length < 2}
             />
+            {invited.length < 2 && (
+              <div className="text-gray-400 opacity-60 mt-1">Add at least 2 participants to manage exclusions</div>
+            )}
           </div>
-          {invited.length < 2 && (
-            <div className="text-gray-400 mt-2">Add at least 2 participants to set exclusions.</div>
-          )}
         </div>
-        <button type="submit" className="mt-4 px-4 py-2 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700 w-full">{isEdit ? 'Update Event' : 'Create Event'}</button>
+        <button type="submit" className="mt-4 px-4 py-2 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700">{isEdit ? 'Update Event' : 'Create Event'}</button>
         {error && <div className="text-red-600 font-semibold mt-2">{error}</div>}
         {success && <div className="text-green-600 font-semibold mt-2">{success}</div>}
       </form>

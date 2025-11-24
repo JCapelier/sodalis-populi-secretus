@@ -13,6 +13,37 @@ export default async function UserDashboardPage({ params }: Props) {
   const resolvedParams = await params;
   const userId = Number(resolvedParams.id);
 
+
+  const childrenResult = await query(
+    `SELECT * FROM children WHERE parent_id = $1 OR other_parent_id = $1`,
+    [userId]
+  );
+  const children = childrenResult.rows;
+
+  // For each child, fetch events where the child is a participant
+  const childrenEvents: { child: any; events: EventType[] }[] = await Promise.all(
+    children.map(async (child: any) => {
+      const childEventsResult = await query(
+        `SELECT e.* FROM events e
+         JOIN event_participants ep ON ep.event_id = e.id
+         WHERE ep.invitee_id = $1 AND ep.type = 'child'`,
+        [child.id]
+      );
+      return {
+        child,
+        events: childEventsResult.rows as EventType[],
+      };
+    })
+  );
+
+  const fullChildrenEvents = await Promise.all(
+    childrenEvents.map(async ({ child, events }) => ({
+      child,
+      events: await Promise.all(events.map(event => getEventInfo(event))),
+    }))
+  );
+
+
   // Fetch managed events
   const managedEventsResult = await query(
     "SELECT * FROM events WHERE admin_id = $1",
@@ -24,7 +55,7 @@ export default async function UserDashboardPage({ params }: Props) {
   const participatingEventsResult = await query(
     `SELECT * FROM events e
      JOIN event_participants ep ON ep.event_id = e.id
-     WHERE ep.user_id = $1 AND e.admin_id != $1`,
+     WHERE ep.invitee_id = $1 AND e.admin_id != $1`,
     [userId]
   );
   const participatingEvents = participatingEventsResult.rows as EventType[];
@@ -46,6 +77,7 @@ export default async function UserDashboardPage({ params }: Props) {
       <EventsIndex
         managedEvents={fullManagedEvents}
         participatingEvents={fullParticipatingEvents}
+        childrenEvents={fullChildrenEvents}
         currentUserId={userId}
       />
     </div>
