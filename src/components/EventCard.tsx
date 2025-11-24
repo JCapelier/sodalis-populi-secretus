@@ -13,9 +13,10 @@ interface EventCardProps {
   currentUserId: number;
   eventParticipants?: Participant[];
   eventExclusions?: (Exclusion & { giverUsername?: string; receiverUsername?: string })[];
+  childDraft: {option: boolean, childId?: number}
 }
 
-export default function EventCard({ name, endsAt, priceLimitCents, adminName, eventId, adminId, currentUserId, eventParticipants = [], eventExclusions = [] }: EventCardProps) {
+export default function EventCard({ name, endsAt, priceLimitCents, adminName, eventId, adminId, currentUserId, childDraft, eventParticipants = [], eventExclusions = [] }: EventCardProps) {
   const [open, setOpen] = useState(false);
   return (
     <div className="bg-white border border-gray-400 rounded-xl p-5 mb-4 shadow-md">
@@ -52,7 +53,7 @@ export default function EventCard({ name, endsAt, priceLimitCents, adminName, ev
           )}
           <div className="flex gap-2 mt-4">
             {Number(currentUserId) === Number(adminId) && <EditEventButton eventId={eventId} />}
-            <DraftButton eventId={eventId} currentUserId={currentUserId} />
+            <DraftButton eventId={eventId} currentUserId={currentUserId} childDraft={childDraft} />
           </div>
         </div>
       )}
