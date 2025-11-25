@@ -4,6 +4,9 @@ import EventsIndex from "@/components/EventsIndex";
 import { getEventInfo, query } from "@/lib/db";
 import { EventInfo, Event as EventType } from "@/type";
 import CreateEventButton from "@/components/CreateEventButton";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { redirect } from "next/navigation";
 
 interface Props {
   params: { id: string };
@@ -12,6 +15,10 @@ interface Props {
 export default async function UserDashboardPage({ params }: Props) {
   const resolvedParams = await params;
   const userId = Number(resolvedParams.id);
+  const session = await getServerSession(authOptions);
+  if (!session || !session.user || Number(session.user.id) !== userId) {
+    redirect("/");
+  }
 
 
   const childrenResult = await query(
