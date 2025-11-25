@@ -15,8 +15,12 @@ export async function PUT(request: Request, context: any) {
     }
 
     return NextResponse.json(changeUsernameResult.rows[0]);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Update username error', error);
+    // Postgres unique violation error code is '23505'
+    if (error && error.code === '23505') {
+      return NextResponse.json({ error: 'This username is already taken.' }, { status: 400 });
+    }
     return NextResponse.json({error: 'Internal server error'}, {status: 500})
   }
 }
