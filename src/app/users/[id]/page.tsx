@@ -70,7 +70,7 @@ export default async function UserDashboardPage({ params }: Props) {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
-      <Dashboard />
+      <Dashboard childrenList={children} />
       <div className="w-full max-w-3xl mx-auto flex flex-col items-center my-8">
         <CreateEventButton />
       </div>

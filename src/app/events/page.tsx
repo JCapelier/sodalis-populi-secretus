@@ -19,7 +19,7 @@ export default async function EventsIndex() {
     SELECT event.*
     FROM events event
     JOIN event_participants event_participant ON event_participant.event_id = event.id
-    WHERE event_participant.user_id = $1 AND event.admin_id <> $1
+    WHERE event_participant.invitee_id = $1 AND event.admin_id <> $1
     `;
   const participantResult = await query(fetchEventParticipantsQuery, [session.user.id]);
   const participantEvents = participantResult.rows as Event[];

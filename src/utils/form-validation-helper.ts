@@ -59,16 +59,6 @@ export function hasValidAssignment(
     exclusionMap.get(from)?.add(to);
   }
 
-  // Debug: print exclusion map
-  if (typeof console !== 'undefined') {
-    console.log('Secret Santa assignment debug:');
-    console.log('Participants:', ids);
-    console.log('Exclusions:', exclusions);
-    for (const [from, tos] of exclusionMap.entries()) {
-      console.log(`Cannot assign from ${from} to:`, Array.from(tos));
-    }
-  }
-
   // Backtracking: try to assign each giver to a receiver
   function backtrack(giverIdx: number, used: Set<string>): boolean {
     if (giverIdx === n) return true; // All assigned
