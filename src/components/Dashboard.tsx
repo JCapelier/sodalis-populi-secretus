@@ -10,7 +10,7 @@ import { apiPut } from "@/lib/api";
 import ChangePasswordModal from "./ChangePasswordModal";
 
 interface DashboardProps {
-  childrenList: Array<{ id: number; username?: string; name?: string }>;
+  childrenList: { id: number; username?: string; name?: string }[];
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ childrenList }) => {

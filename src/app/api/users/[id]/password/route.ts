@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import bcrypt from "bcrypt";
 
-export async function PUT(req: NextRequest,  context: any) {
+export async function PUT(req: NextRequest,  context: {params: Promise<{id: string}>}) {
   const params = await context.params;
   const userId = Number(params.id);
   const { oldPassword, newPassword } = await req.json();
@@ -11,8 +11,8 @@ export async function PUT(req: NextRequest,  context: any) {
   }
 
   // Fetch user
-  const userResult = await query("SELECT password_hash FROM users WHERE id = $1", [userId]);
-  if (userResult.rowCount === 0) {
+  const userResult = await query<{password_hash: string}>("SELECT password_hash FROM users WHERE id = $1", [userId]);
+  if (userResult.rows.length === 0) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
   const hashedPassword = userResult.rows[0].password_hash;

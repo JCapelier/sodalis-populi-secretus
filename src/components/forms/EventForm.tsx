@@ -1,5 +1,5 @@
 'use client';
-import { Event, Exclusion, Participant, Status } from "@/type";
+import { Event, Exclusion, Participant } from "@/type";
 import { useState, useEffect } from "react";
 import ExclusionsManager from "./ExclusionsManager";
 import InviteParticipantsField from "./InviteParticipantsField";
@@ -9,6 +9,7 @@ import { useSession } from "next-auth/react";
 
 interface EventFormProps {
   idString?: string | null;
+  onSuccess?: () => void;
 }
 
 export default function EventForm({ idString }: EventFormProps) {
@@ -78,7 +79,7 @@ export default function EventForm({ idString }: EventFormProps) {
       exclusions,
     };
 
-    let result, formData;
+    let result;
     if (isEdit && eventId) {
       result = await fetch(`/api/events/${eventId}`, {
         method: 'PUT',
@@ -92,7 +93,7 @@ export default function EventForm({ idString }: EventFormProps) {
         body: JSON.stringify(payload),
       });
     }
-    formData = await result.json();
+    const formData = await result.json();
     if (!result.ok) {
       setError(formData.error || (isEdit ? 'Failed to update event' : 'Failed to create event'));
     } else {
@@ -132,7 +133,6 @@ export default function EventForm({ idString }: EventFormProps) {
             if (!invited.some(invitee => invitee.invitee_id === user.invitee_id && invitee.type === user.type )) {setInvited([...invited, user])} ;
           }}
           searchEndPoint="/api/autocomplete/invitees"
-          inputClassName="border border-gray-400 rounded px-2 py-1 mt-1 text-black bg-white"
         />
         <div className="mt-2">
           <div className="font-semibold mb-1 text-black">Invited participants:</div>

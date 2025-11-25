@@ -1,13 +1,13 @@
 import { query } from "@/lib/db";
 import { NextResponse } from "next/server";
 
-export async function GET(request: Request, context: any) {
+export async function GET(request: Request, context: {params: {id: string}}) {
   const params = await context.params;
   const id = Number(params.id);
 
   try {
     // Get parent_id and other_parent_id from children table
-    const childRes = await query(
+    const childRes = await query<{parent_id: number, other_parent_id: number}>(
       `SELECT parent_id, other_parent_id FROM children WHERE id = $1`,
       [id]
     );

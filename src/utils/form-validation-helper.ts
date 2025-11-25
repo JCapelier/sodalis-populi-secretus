@@ -1,6 +1,4 @@
-// Use the same types as in draft-helper.ts
-export type Participant = { id: number; username: string; type: 'user' | 'child' };
-export type Exclusion = { invitee_id: number; invitee_type: 'user' | 'child'; excluded_invitee_id: number; excluded_invitee_type: 'user' | 'child' };
+import { Exclusion, Participant } from "@/type";
 
 export function validateSignUp({
   username,
@@ -43,11 +41,11 @@ export function hasValidAssignment(
 ): boolean {
   const n = participants.length;
   // Use array of {id, type} for uniqueness
-  const ids = participants.map(p => ({ id: p.id, type: p.type }));
+  const ids = participants.map(p => ({ invitee_id: p.invitee_id, type: p.type }));
 
   // Build exclusion map: {id, type} -> Set of forbidden {id, type} (including self)
-  function key(obj: { id: number; type: string }) {
-    return `${obj.id}:${obj.type}`;
+  function key(obj: { invitee_id: number; type: string }) {
+    return `${obj.invitee_id}:${obj.type}`;
   }
   const exclusionMap = new Map<string, Set<string>>();
   for (const p of participants) {

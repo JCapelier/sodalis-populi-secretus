@@ -29,8 +29,8 @@ const ChangeUsernameModal: React.FC<ChangeUsernameModalProps> = ({ isOpen, onClo
         setSuccess("");
         onClose();
       }, 1200);
-    } catch (err: any) {
-      setError(err.message || "Failed to update username");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update username");
     } finally {
       setLoading(false);
     }

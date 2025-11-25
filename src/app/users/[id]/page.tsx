@@ -2,7 +2,7 @@ import React from "react";
 import Dashboard from "@/components/Dashboard";
 import EventsIndex from "@/components/EventsIndex";
 import { getEventInfo, query } from "@/lib/db";
-import { EventInfo, Event as EventType } from "@/type";
+import { Child, EventInfo, Event as EventType } from "@/type";
 import CreateEventButton from "@/components/CreateEventButton";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
@@ -25,11 +25,11 @@ export default async function UserDashboardPage({ params }: Props) {
     `SELECT * FROM children WHERE parent_id = $1 OR other_parent_id = $1`,
     [userId]
   );
-  const children = childrenResult.rows;
+  const children = childrenResult.rows as Child[];
 
   // For each child, fetch events where the child is a participant
-  const childrenEvents: { child: any; events: EventType[] }[] = await Promise.all(
-    children.map(async (child: any) => {
+  const childrenEvents: { child: Child; events: EventType[] }[] = await Promise.all(
+    children.map(async (child: Child) => {
       const childEventsResult = await query(
         `SELECT e.* FROM events e
          JOIN event_participants ep ON ep.event_id = e.id

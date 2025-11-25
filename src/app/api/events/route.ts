@@ -22,7 +22,7 @@ export async function POST(request: Readonly<Request>) {
       RETURNING *
       `;
 
-    const eventResult = await query(insertEventQuery, [
+    const eventResult = await query<{id: number, name: string, ends_at: string, admin_id: number, price_limits_cents: number}>(insertEventQuery, [
       name.trim(),
       ends_at,
       admin_id,
@@ -52,18 +52,11 @@ export async function POST(request: Readonly<Request>) {
     }
 
 
-    // Map participants to {id, type, username} for assignment logic
-    const assignmentParticipants = participants.map((p: any) => ({
-      id: p.invitee_id,
-      type: p.type,
-      username: p.username,
-    }));
-
-    if (!hasValidAssignment(assignmentParticipants, exclusions)) {
+    if (!hasValidAssignment(participants, exclusions)) {
       return NextResponse.json({ error: "No valid assignment possible with these exclusions." }, { status: 400 });
     }
 
-    await runDraft(eventId, assignmentParticipants, exclusions);
+    await runDraft(eventId, participants, exclusions);
 
     return NextResponse.json({ event: eventResult.rows[0] }, { status: 201 });
   } catch (error) {

@@ -30,7 +30,7 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: "Invalid exclusions array" }, { status: 400 });
   }
   // Remove all existing exclusions for this event
-  await db.query(`DELETE FROM exclusions WHERE event_id = $1`, [eventId]);
+  await query(`DELETE FROM exclusions WHERE event_id = $1`, [eventId]);
   // Insert new exclusions
   for (const ex of exclusions) {
     if (
@@ -38,7 +38,7 @@ export async function PUT(req: NextRequest) {
       typeof ex.excluded_user_id === "number" &&
       ex.user_id !== ex.excluded_user_id
     ) {
-      await db.query(
+      await query(
         `INSERT INTO exclusions (event_id, user_id, excluded_user_id) VALUES ($1, $2, $3)`,
         [eventId, ex.user_id, ex.excluded_user_id]
       );

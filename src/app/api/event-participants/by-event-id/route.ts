@@ -1,6 +1,7 @@
 
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
+import { InviteeType } from "@/type";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -17,22 +18,22 @@ export async function GET(request: Request) {
     WHERE event_id = $1
   `;
   try {
-    const result = await query(fetchParticipantsQuery, [eventId]);
+    const result = await query<{invitee_id: number, type: InviteeType}>(fetchParticipantsQuery, [eventId]);
     const participants = result.rows;
     // Separate user and child IDs
     const userIds = participants.filter(p => p.type === 'user').map(p => p.invitee_id);
     const childIds = participants.filter(p => p.type === 'child').map(p => p.invitee_id);
 
     // Fetch usernames for users
-    let userMap = new Map();
+    const userMap = new Map();
     if (userIds.length > 0) {
-      const usersResult = await query(`SELECT id, username FROM users WHERE id = ANY($1)`, [userIds]);
+      const usersResult = await query<{id: number, username: string}>(`SELECT id, username FROM users WHERE id = ANY($1)`, [userIds]);
       usersResult.rows.forEach(u => userMap.set(u.id, u.username));
     }
     // Fetch usernames for children
-    let childMap = new Map();
+    const childMap = new Map();
     if (childIds.length > 0) {
-      const childrenResult = await query(`SELECT id, username FROM children WHERE id = ANY($1)`, [childIds]);
+      const childrenResult = await query<{id: number, username: string}>(`SELECT id, username FROM children WHERE id = ANY($1)`, [childIds]);
       childrenResult.rows.forEach(c => childMap.set(c.id, c.username));
     }
 
