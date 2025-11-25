@@ -45,7 +45,7 @@ const AddChildButton: React.FC<AddChildButtonProps> = ({ userId }) => {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="inline-block mb-4 px-5 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded shadow transition"
+        className="inline-block mb-2 px-3 py-1 bg-green-600 hover:bg-green-700 text-white font-semibold rounded shadow text-sm transition"
         style={{ textDecoration: 'none' }}
       >
         + Add Child

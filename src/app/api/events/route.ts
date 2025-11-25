@@ -34,7 +34,6 @@ export async function POST(request: Readonly<Request>) {
     for (const participant of participants) {
       await query(insertParticipantQuery, [participant.invitee_id, eventId, participant.type])
     }
-    console.log(`Participants: ${participants}`)
 
     const insertExclusionQuery = `INSERT INTO exclusions (event_id, invitee_id, invitee_type, excluded_invitee_id, excluded_invitee_type) VALUES ($1, $2, $3, $4, $5)`;
     // To avoid duplicate reciprocal insertions, keep a Set of processed pairs

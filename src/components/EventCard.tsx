@@ -1,3 +1,4 @@
+'use client';
 import React, { useState } from "react";
 import EditEventButton from "./EditEventButton";
 import DraftButton from "./DraftButton";
