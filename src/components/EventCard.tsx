@@ -43,11 +43,38 @@ export default function EventCard({ name, endsAt, priceLimitCents, adminName, ev
           {eventExclusions.length > 0 && (
             <div className="text-gray-700"><strong>Exclusions:</strong>
               <ul className="list-disc ml-6">
-                {eventExclusions.map((ex, i) => (
-                  <li key={i}>
-                    {(ex.giverUsername || ex.user_id) + " cannot draw " + (ex.receiverUsername || ex.excluded_user_id)}
-                  </li>
-                ))}
+                {(() => {
+                  // Build a map to detect reciprocal exclusions
+                  const exclusionMap = new Map();
+                  eventExclusions.forEach(ex => {
+                    const key = `${ex.giverUsername}--${ex.receiverUsername}`;
+                    exclusionMap.set(key, ex);
+                  });
+                  const displayed = new Set();
+                  return eventExclusions.filter(ex => {
+                    const key = `${ex.giverUsername}--${ex.receiverUsername}`;
+                    const reverseKey = `${ex.receiverUsername}--${ex.giverUsername}`;
+                    if (displayed.has(key) || displayed.has(reverseKey)) return false;
+                    displayed.add(key);
+                    // If reverse exists, treat as reciprocal
+                    return true;
+                  }).map((ex, i) => {
+                    const key = `${ex.giverUsername}--${ex.receiverUsername}`;
+                    const reverseKey = `${ex.receiverUsername}--${ex.giverUsername}`;
+                    const isReciprocal = exclusionMap.has(reverseKey);
+                    return (
+                      <li key={i}>
+                        {ex.giverUsername}
+                        {isReciprocal ? (
+                          <span title="Reciprocal exclusion" className="mx-1">&#8646;</span>
+                        ) : (
+                          <span title="One-way exclusion" className="mx-1">&#8594;</span>
+                        )}
+                        {ex.receiverUsername}
+                      </li>
+                    );
+                  });
+                })()}
               </ul>
             </div>
           )}
