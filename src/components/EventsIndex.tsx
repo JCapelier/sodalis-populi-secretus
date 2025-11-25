@@ -1,6 +1,6 @@
 import React from "react";
 import EventsCategory from "./EventsCategory";
-import { EventInfo, Event as EventType } from "@/type";
+import { EventInfo } from "@/type";
 
 export type Child = {
   id: number;
@@ -23,14 +23,14 @@ const EventsIndex: React.FC<EventsIndexProps> = ({ managedEvents, participatingE
       color="blue"
       events={managedEvents}
       currentUserId={currentUserId}
-      childDraft={false}
+      childDraft={{option: false}}
     />
     <EventsCategory
       title="Events I Participate In"
       color="green"
       events={participatingEvents}
       currentUserId={currentUserId}
-      childDraft={false}
+      childDraft={{option: false}}
     />
     {childrenEvents.map(childEvents => (
       <EventsCategory

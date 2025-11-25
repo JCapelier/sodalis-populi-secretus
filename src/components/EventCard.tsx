@@ -59,12 +59,12 @@ export default function EventCard({ name, endsAt, priceLimitCents, adminName, ev
                     displayed.add(key);
                     // If reverse exists, treat as reciprocal
                     return true;
-                  }).map((ex, i) => {
+                  }).map((ex) => {
                     const key = `${ex.giverUsername}--${ex.receiverUsername}`;
                     const reverseKey = `${ex.receiverUsername}--${ex.giverUsername}`;
                     const isReciprocal = exclusionMap.has(reverseKey);
                     return (
-                      <li key={i}>
+                      <li key={key}>
                         {ex.giverUsername}
                         {isReciprocal ? (
                           <span title="Reciprocal exclusion" className="mx-1">&#8646;</span>

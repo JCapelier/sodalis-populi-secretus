@@ -1,19 +1,17 @@
+import { Child, InviteeSearchResult, Participant } from "@/type";
 import React, { useState, useRef } from "react";
-import { ParticipantFormEntry } from "./EventForm";
-
 
 type InviteParticipantsFieldProps = {
-  onInvite: (user: ParticipantFormEntry) => void;
+  onInvite: (user: Participant) => void;
   searchEndPoint: string;
+
 };
-
-
 
 const InviteParticipantsField: React.FC<InviteParticipantsFieldProps> = ({ onInvite, searchEndPoint }) => {
 
 	const [username, setUsername] = useState("");
 	const [error, setError] = useState<string | null>(null);
-	const [suggestions, setSuggestions] = useState<ParticipantFormEntry[]>([]);
+	const [suggestions, setSuggestions] = useState<InviteeSearchResult[]>([]);
 	const [showSuggestions, setShowSuggestions] = useState(false);
 	const [parentNames, setParentNames] = useState<Record<number, string>>({});
 	const inputRef = useRef<HTMLInputElement>(null);
@@ -36,8 +34,8 @@ const InviteParticipantsField: React.FC<InviteParticipantsFieldProps> = ({ onInv
 				setSuggestions(data.users);
 				setShowSuggestions(true);
 				// For each child, fetch parent names
-				const childInvitees = data.users.filter((u: any) => u.type === 'child');
-				const parentNamePromises = childInvitees.map(async (child: any) => {
+				const childInvitees = data.users.filter((u: InviteeSearchResult) => u.type === 'child');
+				const parentNamePromises = childInvitees.map(async (child: Child) => {
 					try {
 						const res = await fetch(`/api/children/${child.id}/parents`);
 						const parentData = await res.json();
@@ -67,7 +65,7 @@ const InviteParticipantsField: React.FC<InviteParticipantsFieldProps> = ({ onInv
 	};
 
 	// Handle selecting a suggestion
-	const handleSelect = (user: any) => {
+	const handleSelect = (user: InviteeSearchResult) => {
 		setUsername('');
 		setSuggestions([]);
 		setShowSuggestions(false);
@@ -112,7 +110,7 @@ const InviteParticipantsField: React.FC<InviteParticipantsFieldProps> = ({ onInv
 								>
 									{ !invitee.type || invitee.type === 'user'
 										? invitee.username
-										: `${invitee.username} (child of ${parentNames[invitee.invitee_id] || '...'})`}
+										: `${invitee.username} (child of ${parentNames[invitee.id] || '...'})`}
 								</li>
 							))
 						) : (

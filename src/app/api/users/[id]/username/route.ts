@@ -2,7 +2,7 @@ import { query } from "@/lib/db";
 import { NextResponse } from "next/server";
 
 
-export async function PUT(request: Request, context: any) {
+export async function PUT(request: Request, context: {params: Promise<{id: string}>}) {
   const params = await context.params;
   const id = Number(params.id);
 
@@ -15,10 +15,10 @@ export async function PUT(request: Request, context: any) {
     }
 
     return NextResponse.json(changeUsernameResult.rows[0]);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Update username error', error);
     // Postgres unique violation error code is '23505'
-    if (error && error.code === '23505') {
+    if (error && typeof error === 'object' && 'code' in error && error.code === '23505') {
       return NextResponse.json({ error: 'This username is already taken.' }, { status: 400 });
     }
     return NextResponse.json({error: 'Internal server error'}, {status: 500})

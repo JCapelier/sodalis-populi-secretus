@@ -1,4 +1,5 @@
 "use client";
+import { Participant } from "@/type";
 import InviteParticipantsField from "./forms/InviteParticipantsField";
 import React, { useState } from "react";
 
@@ -9,7 +10,7 @@ const AddChildButton: React.FC<AddChildButtonProps> = ({ userId }) => {
   const [name, setName] = useState("");
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
-  const [otherParent, setOtherParent] = useState<{ user_id: number; username: string } | null>(null);
+  const [otherParent, setOtherParent] = useState<Participant | null>(null);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -20,10 +21,10 @@ const AddChildButton: React.FC<AddChildButtonProps> = ({ userId }) => {
       return;
     }
 
-    const payload: any = {
+    const payload = {
       name: name.trim(),
       parent_id: userId,
-      other_parent_id: otherParent ? otherParent.user_id : null,
+      other_parent_id: otherParent ? otherParent.invitee_id : null,
     };
     const result = await fetch(`/api/users/${userId}/children`, {
       method: 'POST',
@@ -60,7 +61,7 @@ const AddChildButton: React.FC<AddChildButtonProps> = ({ userId }) => {
             </div>
             <form onSubmit={handleSubmit} className="w-full">
               <label className="block text-black font-semibold mb-1">
-                Child's name:
+                Child&apos;s name:
                 <input
                   value={name}
                   onChange={e => setName(e.target.value)}

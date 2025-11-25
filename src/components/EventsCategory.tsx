@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import EventCard from "@/components/EventCard";
-import type { EventInfo, Event as EventType, Participant } from "@/type";
+import type { EventInfo } from "@/type";
 
 interface EventsCategoryProps {
   title: string;

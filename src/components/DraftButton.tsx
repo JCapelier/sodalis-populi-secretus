@@ -2,7 +2,6 @@
 import React, { useState, } from "react";
 import { useSession } from "next-auth/react";
 import { apiGet } from "@/lib/api";
-import { Pairing } from "@/type";
 
 interface DraftButtonProps {
   eventId: number;

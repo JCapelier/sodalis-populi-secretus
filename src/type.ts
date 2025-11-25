@@ -1,26 +1,14 @@
-import NextAuth from "next-auth";
-
-declare module "next-auth" {
-  interface User {
-    id: number | string;
-  }
-  interface Session {
-    user?: {
-      id?: number | string;
-      name?: string | null;
-      email?: string | null;
-      image?: string | null;
-      username?: string | null;
-    };
-  }
-}
-
 export type PublicUser = { id: number, username: string};
 
 export enum Status {
   Confirmed = "confirmed",
   Pending = "pending",
   Declined = "declined",
+}
+
+export enum InviteeType {
+  Child = 'child',
+  User = 'user'
 }
 
 export type Event = {
@@ -32,7 +20,7 @@ export type Event = {
 };
 
 export type User = {
-  id: number;
+  id: string;
   email: string;
   username: string;
 }
@@ -51,12 +39,29 @@ export type EventParticipantFull = {
   status: Status;
 }
 
-export type Exclusion = { invitee_id: number; invitee_type: 'child' | 'user', excluded_invitee_id: number; excluded_invitee_type: 'child' | 'user', };
-export type Participant = { invitee_id: number; type: 'child' | 'user', username: string };
-export type Pairing = { giver_id: number; giver_type: 'child' | 'user', receiver_id: number; receiver_type: 'child' | 'user',}
+export type Exclusion = { invitee_id: number; invitee_type: InviteeType, excluded_invitee_id: number; excluded_invitee_type: InviteeType, };
+export type Participant = { invitee_id: number; type: InviteeType, username: string };
+export type Pairing = { giver_id: number; giver_type: InviteeType, receiver_id: number; receiver_type: InviteeType,}
 
 export interface EventInfo extends Event {
   adminUsername: string;
   participants: Participant[];
   exclusions: Exclusion[];
 }
+
+export type Child = {
+  id: number;
+  parent_id: number;
+  other_parent_id: number;
+  username: string;
+}
+
+export type ExclusionWithReciprocal = Exclusion & {
+  reciprocal?: boolean;
+};
+
+export type InviteeSearchResult = {
+  id: number;
+  username: string;
+  type: InviteeType;
+};

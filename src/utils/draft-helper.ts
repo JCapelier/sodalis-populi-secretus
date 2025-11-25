@@ -1,11 +1,7 @@
 import { query } from "@/lib/db";
+import { Exclusion, Pairing, Participant } from "@/type";
 import { shuffleArray } from "@/utils/shuffle-array";
 
-
-// Updated types for id+type support
-export type Participant = { id: number; username: string; type: 'user' | 'child' };
-export type Exclusion = { invitee_id: number; invitee_type: 'user' | 'child'; excluded_invitee_id: number; excluded_invitee_type: 'user' | 'child' };
-export type Pairing = { giver: { id: number; type: 'user' | 'child' }, receiver: { id: number; type: 'user' | 'child' } };
 
 export function possibleDraws(
   drafter: { id: number; type: 'user' | 'child' },
@@ -14,15 +10,15 @@ export function possibleDraws(
   alreadyAssignedPairings: Pairing[],
 ): Participant[] {
   return participants.filter(participant =>
-    !(participant.id === drafter.id && participant.type === drafter.type) &&
+    !(participant.invitee_id === drafter.id && participant.type === drafter.type) &&
     !exclusions.some(exclusion =>
       exclusion.invitee_id === drafter.id &&
       exclusion.invitee_type === drafter.type &&
-      exclusion.excluded_invitee_id === participant.id &&
+      exclusion.excluded_invitee_id === participant.invitee_id &&
       exclusion.excluded_invitee_type === participant.type
     ) &&
     !alreadyAssignedPairings.some(pairing =>
-      pairing.receiver.id === participant.id && pairing.receiver.type === participant.type
+      pairing.receiver_id === participant.invitee_id && pairing.receiver_type === participant.type
     )
   );
 }
@@ -37,22 +33,23 @@ export function assignPairings(
     return { pairings: currentAssignments.slice(), success: true };
   }
   const nextGiver = givers.find(giver =>
-    !currentAssignments.some(assignment => assignment.giver.id === giver.id && assignment.giver.type === giver.type)
+    !currentAssignments.some(assignment => assignment.giver_id === giver.invitee_id && assignment.giver_type === giver.type)
   );
   if (!nextGiver) {
     return { pairings: currentAssignments.slice(), success: false };
   }
   const possibleReceivers = shuffleArray(possibleDraws(
-    { id: nextGiver.id, type: nextGiver.type },
+    { id: nextGiver.invitee_id, type: nextGiver.type },
     receivers,
     exclusions,
     currentAssignments
   ));
   for (const receiver of possibleReceivers) {
     currentAssignments.push({
-      giver: { id: nextGiver.id, type: nextGiver.type },
-      receiver: { id: receiver.id, type: receiver.type }
-    });
+      giver_id: nextGiver.invitee_id,
+      giver_type: nextGiver.type,
+      receiver_id: receiver.invitee_id,
+      receiver_type: receiver.type });
     const result = assignPairings(givers, receivers, exclusions, currentAssignments);
     if (result.success) {
       return result;
@@ -82,7 +79,7 @@ export async function runDraft(
   // Insert new pairings
   const insertPairingQuery = `INSERT INTO pairings (event_id, giver_id, giver_type, receiver_id, receiver_type) VALUES ($1, $2, $3, $4, $5)`;
   for (const pairing of pairings) {
-    await query(insertPairingQuery, [eventId, pairing.giver.id, pairing.giver.type, pairing.receiver.id, pairing.receiver.type]);
+    await query(insertPairingQuery, [eventId, pairing.giver_id, pairing.giver_type, pairing.receiver_id, pairing.receiver_type]);
   }
   return { success: true, pairings };
 }

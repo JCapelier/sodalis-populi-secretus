@@ -4,7 +4,7 @@ export async function apiGet<T>(url: string): Promise<T> {
   return res.json();
 }
 
-export async function apiPost<T>(url: string, data: any): Promise<T> {
+export async function apiPost<T>(url: string, data: unknown): Promise<T> {
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -14,7 +14,7 @@ export async function apiPost<T>(url: string, data: any): Promise<T> {
   return res.json();
 }
 
-export async function apiPut<T>(url: string, data: any): Promise<T> {
+export async function apiPut<T>(url: string, data: unknown): Promise<T> {
   const res = await fetch(url, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },

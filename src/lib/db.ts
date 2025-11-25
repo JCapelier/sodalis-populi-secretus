@@ -1,5 +1,5 @@
 import { Event, EventInfo, Exclusion, Participant } from "@/type";
-import { Pool } from "pg";
+import { Pool, QueryResultRow } from "pg";
 
 const connectionString = process.env.DATABASE_URL;
 
@@ -11,7 +11,7 @@ const pool = new Pool({
   connectionString,
 });
 
-export async function query<T = unknown>(text: string, params?: any[]): Promise<{ rows: T[] }> {
+export async function query<T extends QueryResultRow = QueryResultRow>(text: string, params?: unknown[]): Promise<{ rows: T[] }> {
   return pool.query<T>(text, params);
 }
 
@@ -40,7 +40,7 @@ export async function getEventInfo(event: Event): Promise<EventInfo & {
   });
 
   // Fetch all usernames in one query for users
-  let userMap = new Map<number, string>();
+  const userMap = new Map<number, string>();
   if (userIds.size > 0) {
     const userIdList = Array.from(userIds);
     const usersResult = await query<{ id: number; username: string }>(
@@ -51,7 +51,7 @@ export async function getEventInfo(event: Event): Promise<EventInfo & {
   }
 
   // Fetch all usernames in one query for children
-  let childMap = new Map<number, string>();
+  const childMap = new Map<number, string>();
   if (childIds.size > 0) {
     const childIdList = Array.from(childIds);
     const childrenResult = await query<{ id: number; username: string }>(
