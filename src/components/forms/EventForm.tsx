@@ -37,7 +37,22 @@ export default function EventForm({ idString }: EventFormProps) {
       );
     });
     apiGet<Participant[]>(`/api/event-participants/by-event-id?event-id=${eventId}`).then(setInvited);
-    apiGet<Exclusion[]>(`/api/exclusions/by-event-id?event-id=${eventId}`).then(setExclusions);
+    apiGet<Exclusion[]>(`/api/exclusions/by-event-id?event-id=${eventId}`).then((rawExclusions) => {
+      // Infer reciprocal property for frontend display
+      const exclusionMap = new Map();
+      rawExclusions.forEach(e => {
+        const key = `${e.invitee_type}-${e.invitee_id}--${e.excluded_invitee_type}-${e.excluded_invitee_id}`;
+        exclusionMap.set(key, e);
+      });
+      const exclusionsWithReciprocal = rawExclusions.map(e => {
+        const reverseKey = `${e.excluded_invitee_type}-${e.excluded_invitee_id}--${e.invitee_type}-${e.invitee_id}`;
+        return {
+          ...e,
+          reciprocal: exclusionMap.has(reverseKey),
+        };
+      });
+      setExclusions(exclusionsWithReciprocal);
+    });
   }, [eventId, isEdit]);
 
   if (!(session && session.user && session.user.id)) {
@@ -129,7 +144,13 @@ export default function EventForm({ idString }: EventFormProps) {
                   type="button"
                   aria-label={`Remove ${invitee.username}`}
                   className="text-red-600 hover:text-red-800 ml-2 font-bold"
-                  onClick={() => setInvited(invited.filter(p => !(p.invitee_id === invitee.invitee_id && p.type === invitee.type)))}
+                  onClick={() => {
+                    setInvited(invited.filter(p => !(p.invitee_id === invitee.invitee_id && p.type === invitee.type)));
+                    setExclusions(exclusions.filter(e =>
+                      !(e.invitee_id === invitee.invitee_id && e.invitee_type === invitee.type) &&
+                      !(e.excluded_invitee_id === invitee.invitee_id && e.excluded_invitee_type === invitee.type)
+                    ));
+                  }}
                 >
                   &#10005;
                 </button>
@@ -140,11 +161,11 @@ export default function EventForm({ idString }: EventFormProps) {
         <div className="mt-2">
           <div className="font-semibold mb-1 text-black">Exclusions:</div>
           <div>
+            {/* Prepare exclusions for elegant display: deduplicate reciprocal exclusions for display */}
             <ExclusionsManager
               participants={invited}
               exclusions={exclusions}
               setExclusions={setExclusions}
-              disabled={invited.length < 2}
             />
             {invited.length < 2 && (
               <div className="text-gray-400 opacity-60 mt-1">Add at least 2 participants to manage exclusions</div>

@@ -70,31 +70,49 @@ const ExclusionsManager: React.FC<ExclusionsManagerProps> = ({ participants, exc
     setExclusions(newList);
   };
 
+  // Deduplicate reciprocal exclusions for display
+  const displayed: Set<string> = new Set();
+  const displayExclusions = exclusions.filter(ex => {
+    if (ex.reciprocal) {
+      // Only display one direction for reciprocal exclusions
+      const key = [ex.invitee_type, ex.invitee_id, ex.excluded_invitee_type, ex.excluded_invitee_id].join('-');
+      const reverseKey = [ex.excluded_invitee_type, ex.excluded_invitee_id, ex.invitee_type, ex.invitee_id].join('-');
+      if (displayed.has(reverseKey)) return false;
+      displayed.add(key);
+      return true;
+    } else {
+      // Always display non-reciprocal exclusions
+      return true;
+    }
+  });
+
   return (
     <div className="mt-4">
-      {exclusions.map((ex, idx) => (
-        <div key={`${ex.invitee_type}-${ex.invitee_id}_x_${ex.excluded_invitee_type}-${ex.excluded_invitee_id}_${idx}`} className="flex items-center gap-2 mb-1">
-          <span className="text-black">
-            {participants.find(p => p.invitee_id === ex.invitee_id && p.type === ex.invitee_type)?.username || "?"} cannot draw {participants.find(p => p.invitee_id === ex.excluded_invitee_id && p.type === ex.excluded_invitee_type)?.username || "?"}
-          </span>
-          <input
-            type="checkbox"
-            checked={!!ex.reciprocal}
-            disabled
-            className="ml-2"
-            title="Reciprocal exclusion"
-          />
-          <span className="text-xs text-gray-500">reciprocal</span>
-          <button
-            type="button"
-            className="text-red-500 hover:text-red-700 ml-2"
-            onClick={() => handleRemove(idx)}
-            aria-label="Remove exclusion"
-          >
-            &#10005;
-          </button>
-        </div>
-      ))}
+      {displayExclusions.map((ex, idx) => {
+        const from = participants.find(p => p.invitee_id === ex.invitee_id && p.type === ex.invitee_type)?.username || "?";
+        const to = participants.find(p => p.invitee_id === ex.excluded_invitee_id && p.type === ex.excluded_invitee_type)?.username || "?";
+        return (
+          <div key={`${ex.invitee_type}-${ex.invitee_id}_x_${ex.excluded_invitee_type}-${ex.excluded_invitee_id}_${idx}`} className="flex items-center gap-2 mb-1">
+            <span className="text-black flex items-center gap-1">
+              {from}
+              {ex.reciprocal ? (
+                <span title="Reciprocal exclusion" className="mx-1">&#8646;</span> // double arrow
+              ) : (
+                <span title="One-way exclusion" className="mx-1">&#8594;</span> // single arrow
+              )}
+              {to}
+            </span>
+            <button
+              type="button"
+              className="text-red-500 hover:text-red-700 ml-2"
+              onClick={() => handleRemove(idx)}
+              aria-label="Remove exclusion"
+            >
+              &#10005;
+            </button>
+          </div>
+        );
+      })}
       <div className="flex items-center gap-2 mt-2">
         <select
           value={newExclusion.invitee_id ? `${newExclusion.invitee_type}-${newExclusion.invitee_id}` : ''}
