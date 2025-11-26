@@ -3,19 +3,18 @@ import { query } from "@/lib/db";
 import { hasValidAssignment } from "@/utils/form-validation-helper";
 import { runDraft } from "@/utils/draft-helper";
 import { Exclusion, Participant } from "@/type";
+import { eventRepository } from "@/repositories/EventRepository";
 
 export async function GET(request: Request, context: {params: Promise<{id: string}>}) {
   const params = await context.params;
   const id = Number(params.id);
-  if (isNaN(id)) {
-    return NextResponse.json({ error: "Invalid event id" }, { status: 400 });
-  }
+
   try {
-    const result = await query("SELECT * FROM events WHERE id = $1", [id]);
-    if (result.rows.length === 0) {
+    const event = await eventRepository.findById(id);
+    if (!event) {
       return NextResponse.json({ error: "Event not found" }, { status: 404 });
     }
-    return NextResponse.json(result.rows[0]);
+    return NextResponse.json(event);
   } catch (error) {
     console.error("Fetch event error", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

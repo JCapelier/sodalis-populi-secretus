@@ -19,9 +19,14 @@ export type Event = {
   admin_id: number;
 };
 
-export type User = {
-  id: string;
+export type UserRow = {
+  id: number;
+  username: string;
   email: string;
+  password_hash: string;
+}
+export type User = {
+  id: number;
   username: string;
 }
 
