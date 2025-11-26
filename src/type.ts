@@ -1,6 +1,7 @@
 export type PublicUser = { id: number, username: string};
 
 export enum Status {
+  Invited = "invited",
   Confirmed = "confirmed",
   Pending = "pending",
   Declined = "declined",
@@ -44,7 +45,7 @@ export type EventParticipantFull = {
   status: Status;
 }
 
-export type Exclusion = { invitee_id: number; invitee_type: InviteeType, excluded_invitee_id: number; excluded_invitee_type: InviteeType, };
+export type Exclusion = { id?: number, invitee_id: number; invitee_type: InviteeType, excluded_invitee_id: number; excluded_invitee_type: InviteeType, };
 export type Participant = { invitee_id: number; type: InviteeType, username: string };
 export type Pairing = { giver_id: number; giver_type: InviteeType, receiver_id: number; receiver_type: InviteeType,}
 
@@ -70,3 +71,8 @@ export type InviteeSearchResult = {
   username: string;
   type: InviteeType;
 };
+
+export type InviteeKey = {
+  id: number;
+  type: InviteeType
+}

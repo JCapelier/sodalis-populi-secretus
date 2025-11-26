@@ -60,6 +60,10 @@ export class ExclusionRepository {
   async delete(id: number): Promise<void> {
     await query(`DELETE FROM exclusions WHERE id = $1`, [id]);
   }
+
+  async deleteByEventId(eventId: number): Promise<void> {
+    await query(`DELETE FROM exclusions WHERE event_id = $1`, [eventId])
+  }
 }
 
 export const exclusionRepository = new ExclusionRepository();

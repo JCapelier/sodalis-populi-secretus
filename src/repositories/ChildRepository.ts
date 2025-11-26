@@ -3,12 +3,21 @@ import { Child } from "@/type";
 
 export class ChildRepository {
 
-  async findById(id: number): Promise<Child | null> {
+  async findById(id: number): Promise<Child> {
     const result = await query<Child>(
       `SELECT * FROM children WHERE id = $1`,
       [id]
     );
     return result.rows[0] || null;
+  }
+
+  async findByIds(ids: number[]): Promise<Child[]> {
+    if (ids.length === 0) return [];
+    const result = await query<Child>(
+      `SELECT id, username FROM children WHERE id = ANY($1)`,
+      [ids]
+    );
+    return result.rows;
   }
 
   async findAll(): Promise<Child[]> {
@@ -22,6 +31,14 @@ export class ChildRepository {
       [parentId]
     );
     return result.rows;
+  }
+
+  async getParentIds(id: number): Promise<{parent_id: number, other_parent_id: number | null}> {
+    const result = await query<{ parent_id: number; other_parent_id: number | null }>(
+      `SELECT parent_id, other_parent_id FROM children WHERE id = $1`,
+      [id]
+    );
+    return result.rows[0] || null
   }
 
   async create(data: {

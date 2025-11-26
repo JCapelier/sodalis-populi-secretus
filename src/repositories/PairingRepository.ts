@@ -1,5 +1,5 @@
 import { query } from "@/lib/db";
-import { InviteeType, Pairing } from "@/type";
+import { InviteeKey, InviteeType, Pairing } from "@/type";
 
 export class PairingRepository {
 
@@ -16,12 +16,12 @@ export class PairingRepository {
     return result.rows;
   }
 
-  async findByGiver(giverId: number, giverType: InviteeType): Promise<Pairing[]> {
-    const result = await query<Pairing>(
-      `SELECT * FROM pairings WHERE giver_id = $1 AND giver_type = $2`,
-      [giverId, giverType]
+  async findReceiverByGiverAndEvent(giverId: number, giverType: InviteeType, eventId: number): Promise<InviteeKey> {
+    const result = await query<InviteeKey>(
+      `SELECT receiver_id, receiver_type FROM pairings WHERE giver_id = $1 AND giver_type = $2 AND event_id = $3`,
+      [giverId, giverType, eventId]
     );
-    return result.rows;
+    return result.rows[0];
   }
 
   async findByReceiver(receiverId: number, receiverType: InviteeType): Promise<Pairing[]> {

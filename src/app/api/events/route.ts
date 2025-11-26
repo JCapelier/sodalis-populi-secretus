@@ -1,64 +1,53 @@
 import { NextResponse } from "next/server";
-import { query } from "@/lib/db";
 import { hasValidAssignment } from "@/utils/form-validation-helper";
 import { runDraft } from "@/utils/draft-helper";
+import { eventRepository } from "@/repositories/EventRepository";
+import { eventParticipantRepository } from "@/repositories/EventParticipantRepository";
+import { Exclusion, ExclusionWithReciprocal } from "@/type";
+import { buildReciprocalExclusion } from "@/utils/build-reciprocal";
+import { isSameExclusion } from "@/utils/comparison-helper";
+import { exclusionRepository } from "@/repositories/ExclusionRepository";
 
 export async function POST(request: Readonly<Request>) {
   try {
     const body = await request.json();
-    const { name, ends_at, admin_id, price_limit_cents, participants, exclusions } = body;
 
-    if (!name || typeof name !== 'string' || name.trim().length <= 0) {
+    if (!body.name || typeof body.name !== 'string' || body.name.trim().length <= 0) {
       return NextResponse.json({ error: 'Name is required' }, { status: 400 });
     }
 
-    if (!ends_at || isNaN(Date.parse(ends_at))) {
-      return NextResponse.json({ error: 'Event must end at a valid date' }, { status: 400 })
+    if (!body.ends_at || isNaN(Date.parse(body.ends_at))) {
+      return NextResponse.json({ error: 'Event must end at a valid date' }, { status: 400 });
     }
 
-    const insertEventQuery = `
-      INSERT INTO events (name, ends_at, admin_id, price_limit_cents)
-      VALUES ($1, $2, $3, $4)
-      RETURNING *
-      `;
+    const event = await eventRepository.create(body);
+    const eventId = event.id;
 
-    const eventResult = await query<{id: number, name: string, ends_at: string, admin_id: number, price_limits_cents: number}>(insertEventQuery, [
-      name.trim(),
-      ends_at,
-      admin_id,
-      price_limit_cents || null,
-    ]);
-
-    const eventId = eventResult.rows[0].id;
-    const insertParticipantQuery = `INSERT INTO event_participants (invitee_id, event_id, type) VALUES ($1, $2, $3)`;
-    for (const participant of participants) {
-      await query(insertParticipantQuery, [participant.invitee_id, eventId, participant.type])
+    for (const participant of body.participants) {
+      await eventParticipantRepository.create(participant);
     }
 
-    const insertExclusionQuery = `INSERT INTO exclusions (event_id, invitee_id, invitee_type, excluded_invitee_id, excluded_invitee_type) VALUES ($1, $2, $3, $4, $5)`;
     // To avoid duplicate reciprocal insertions, keep a Set of processed pairs
-    const exclusionPairs = new Set();
-    for (const exclusion of exclusions) {
-      const key = `${exclusion.invitee_id}:${exclusion.excluded_invitee_id}`;
-      const reverseKey = `${exclusion.excluded_invitee_id}:${exclusion.invitee_id}`;
-      if (!exclusionPairs.has(key)) {
-        await query(insertExclusionQuery, [eventId, exclusion.invitee_id, exclusion.invitee_type, exclusion.excluded_invitee_id, exclusion.excluded_invitee_type]);
-        exclusionPairs.add(key);
-      }
-      if (exclusion.reciprocal && !exclusionPairs.has(reverseKey)) {
-        await query(insertExclusionQuery, [eventId, exclusion.excluded_invitee_id, exclusion.invitee_type, exclusion.invitee_id, exclusion.excluded_invitee_type]);
-        exclusionPairs.add(reverseKey);
+    const exclusions: ExclusionWithReciprocal[] = [];
+    for (const exclusion of body.exclusions) {
+      exclusions.push(exclusion);
+      if (exclusion.reciprocal) {
+        const reciprocalExclusion = buildReciprocalExclusion(exclusion);
+        if (!body.exclusions.some((exclusion: Exclusion) => isSameExclusion(exclusion, reciprocalExclusion))) exclusions.push(reciprocalExclusion);
       }
     }
 
+    for (const exclusion of exclusions) {
+      exclusionRepository.create({...exclusion, event_id: eventId});
+    }
 
-    if (!hasValidAssignment(participants, exclusions)) {
+    if (!hasValidAssignment(body.participants, exclusions)) {
       return NextResponse.json({ error: "No valid assignment possible with these exclusions." }, { status: 400 });
     }
 
-    await runDraft(eventId, participants, exclusions);
+    await runDraft(eventId, body.participants, exclusions);
 
-    return NextResponse.json({ event: eventResult.rows[0] }, { status: 201 });
+    return NextResponse.json({ event: event }, { status: 201 });
   } catch (error) {
     console.error('Create event error', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
