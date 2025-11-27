@@ -9,7 +9,7 @@ export async function POST(request: Readonly<Request>) {
     const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
 
     const body = await request.json();
-    const {username, email, password} = body;
+    const {username, password} = body;
 
     if (!usernameRegex.test(username)) return NextResponse.json({ error: 'Invalid username' }, { status: 400 });
 

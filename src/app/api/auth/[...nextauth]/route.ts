@@ -4,7 +4,6 @@ import { query } from "@/lib/db";
 import bcrypt from "bcrypt";
 import type { SessionStrategy } from "next-auth";
 import type { JWT } from "next-auth/jwt";
-import { redirect } from "next/dist/server/api-utils";
 
 // Export the config object as authOptions
 export const authOptions = {
@@ -54,11 +53,8 @@ export const authOptions = {
       }
       return sess;
     },
-    async redirect({ url, baseUrl, token }) {
-      if (token && token.id) {
-        return `/users/${token.id}`;
-      }
-      return baseUrl;
+    redirect({ url, baseUrl }: { url: string; baseUrl: string }) {
+      return url.startsWith(baseUrl) ? url : baseUrl;
     },
   },
 };
