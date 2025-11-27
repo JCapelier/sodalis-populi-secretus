@@ -5,7 +5,7 @@ import { userRepository } from "@/repositories/UserRepository";
 export async function POST(request: Readonly<Request>) {
   try {
 
-    const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+    const usernameRegex = /^[a-zA-Z0-9_-]{3,20}$/;
     const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
 
     const body = await request.json();
