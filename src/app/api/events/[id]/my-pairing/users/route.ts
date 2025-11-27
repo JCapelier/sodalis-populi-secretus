@@ -1,4 +1,7 @@
-import { query } from "@/lib/db";
+import { childRepository } from "@/repositories/ChildRepository";
+import { pairingRepository } from "@/repositories/PairingRepository";
+import { userRepository } from "@/repositories/UserRepository";
+import { InviteeType } from "@/type";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request, context: {params: Promise<{id: string}>}) {
@@ -7,24 +10,20 @@ export async function GET(request: Request, context: {params: Promise<{id: strin
 
   const { searchParams } = new URL(request.url);
   const userIdString = searchParams.get('userId');
-  const userId = userIdString ? Number(userIdString) : undefined;
+  const userId = Number(userIdString);
 
   try {
-    const myPairingQuery = `SELECT receiver_id, receiver_type FROM pairings WHERE giver_id = $1 AND giver_type = 'user'  AND event_id = $2`;
-    type PairingRow = { receiver_id: number, receiver_type: 'child' | 'user' };
-    const myPairing = await query(myPairingQuery, [userId, eventId]) as { rows: PairingRow[] };
-    if (!myPairing.rows.length) {
-      return NextResponse.json({ error: "Pairing not found" }, { status: 404 });
-    }
+    const myReceiverKey = await pairingRepository.findReceiverByGiverAndEvent(userId, InviteeType.User, eventId);
+    console.log(myReceiverKey)
+    if (!myReceiverKey) return NextResponse.json({ error: "Pairing not found" }, { status: 404 });
+    console.log(myReceiverKey)
 
-    const myReceiverQuery = myPairing.rows[0].receiver_type === 'user' ? `SELECT username FROM users WHERE id = $1` : `SELECT username FROM children WHERE id = $1`;
-    type ReceiverRow = { username: string };
-    const myReceiver = await query(myReceiverQuery, [myPairing.rows[0].receiver_id]) as { rows: ReceiverRow[] };
-    if (!myReceiver.rows.length) {
+    const myReceiver = myReceiverKey.type === InviteeType.User ? await userRepository.findById(myReceiverKey.id) : await childRepository.findById(myReceiverKey.id)
+    if (!myReceiver) {
       return NextResponse.json({ error: "Receiver not found" }, { status: 404 });
     }
 
-    const username = myReceiver.rows?.[0]?.username;
+    const username = myReceiver.username;
     return NextResponse.json({ username });
   } catch (error) {
     console.error('Fetching receiver username failed', error);

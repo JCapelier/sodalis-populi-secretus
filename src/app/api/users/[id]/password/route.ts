@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { query } from "@/lib/db";
 import bcrypt from "bcrypt";
+import { userRepository } from "@/repositories/UserRepository";
 
 export async function PUT(req: NextRequest,  context: {params: Promise<{id: string}>}) {
   const params = await context.params;
@@ -11,18 +11,14 @@ export async function PUT(req: NextRequest,  context: {params: Promise<{id: stri
   }
 
   // Fetch user
-  const userResult = await query<{password_hash: string}>("SELECT password_hash FROM users WHERE id = $1", [userId]);
-  if (userResult.rows.length === 0) {
-    return NextResponse.json({ error: "User not found" }, { status: 404 });
-  }
-  const hashedPassword = userResult.rows[0].password_hash;
-  const isMatch = await bcrypt.compare(oldPassword, hashedPassword);
+  const oldPasswordHashed = await userRepository.getPasswordHashById(userId);
+  const isMatch = await bcrypt.compare(oldPassword, oldPasswordHashed);
   if (!isMatch) {
     return NextResponse.json({ error: "Current password is incorrect" }, { status: 401 });
   }
 
   // Hash new password
   const newHashed = await bcrypt.hash(newPassword, 10);
-  await query("UPDATE users SET password_hash = $1 WHERE id = $2", [newHashed, userId]);
-  return NextResponse.json({ success: true });
+  const updatePassword = await userRepository.updatePassword(userId, newHashed);
+  return NextResponse.json(updatePassword);
 }

@@ -1,4 +1,4 @@
-import { query } from "@/lib/db";
+import { userRepository } from "@/repositories/UserRepository";
 import { NextResponse } from "next/server";
 
 
@@ -8,13 +8,13 @@ export async function PUT(request: Request, context: {params: Promise<{id: strin
 
   try {
     const body = await request.json();
-    const changeUsernameResult = await query(`UPDATE users SET username = $1 WHERE id = $2 RETURNING *`, [body.username, id]);
+    const changeUsername = await userRepository.updateUsername(id, body.username);
 
-    if (changeUsernameResult.rows.length === 0) {
+    if (!changeUsername) {
       return NextResponse.json({ error: "Could not update the username" }, { status: 500 });
     }
 
-    return NextResponse.json(changeUsernameResult.rows[0]);
+    return NextResponse.json(changeUsername);
   } catch (error) {
     console.error('Update username error', error);
     // Postgres unique violation error code is '23505'

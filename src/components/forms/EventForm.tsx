@@ -12,7 +12,7 @@ interface EventFormProps {
   onSuccess?: () => void;
 }
 
-export default function EventForm({ idString }: EventFormProps) {
+export default function EventForm({ idString, onSuccess }: EventFormProps) {
   const [name, setName] = useState("");
   const [endsAt, setEndsAt] = useState("");
   const [priceLimit, setPriceLimit] = useState("");
@@ -105,6 +105,7 @@ export default function EventForm({ idString }: EventFormProps) {
         setInvited([]);
       }
     }
+    if (result.ok && onSuccess) onSuccess();
   }
 
   return (

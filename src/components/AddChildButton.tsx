@@ -2,6 +2,7 @@
 import { Participant } from "@/type";
 import InviteParticipantsField from "./forms/InviteParticipantsField";
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 
 type AddChildButtonProps = {userId: number | null}
 
@@ -11,6 +12,7 @@ const AddChildButton: React.FC<AddChildButtonProps> = ({ userId }) => {
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
   const [otherParent, setOtherParent] = useState<Participant | null>(null);
+  const router = useRouter()
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -22,7 +24,7 @@ const AddChildButton: React.FC<AddChildButtonProps> = ({ userId }) => {
     }
 
     const payload = {
-      name: name.trim(),
+      username: name.trim(),
       parent_id: userId,
       other_parent_id: otherParent ? otherParent.invitee_id : null,
     };
@@ -40,6 +42,7 @@ const AddChildButton: React.FC<AddChildButtonProps> = ({ userId }) => {
       setOtherParent(null);
     }
     setOpen(false);
+    router.refresh();
   };
 
   return (

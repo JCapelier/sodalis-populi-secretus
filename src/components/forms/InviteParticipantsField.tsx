@@ -30,11 +30,13 @@ const InviteParticipantsField: React.FC<InviteParticipantsFieldProps> = ({ onInv
 		try {
 			const result = await fetch(`${searchEndPoint}?search=${encodeURIComponent(value)}`);
 			const data = await result.json();
-			if (result.ok && Array.isArray(data.users)) {
-				setSuggestions(data.users);
+      console.log(data)
+      const suggestions = data.suggestions;
+			if (result.ok && Array.isArray(suggestions)) {
+				setSuggestions(suggestions);
 				setShowSuggestions(true);
 				// For each child, fetch parent names
-				const childInvitees = data.users.filter((u: InviteeSearchResult) => u.type === 'child');
+				const childInvitees = suggestions.filter((u: InviteeSearchResult) => u.type === 'child');
 				const parentNamePromises = childInvitees.map(async (child: Child) => {
 					try {
 						const res = await fetch(`/api/children/${child.id}/parents`);

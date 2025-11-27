@@ -1,31 +1,31 @@
 import { query } from "@/lib/db";
-import { Exclusion, Pairing, Participant } from "@/type";
+import { Exclusion, InviteeKey, Pairing } from "@/type";
 import { shuffleArray } from "@/utils/shuffle-array";
 
 
 export function possibleDraws(
-  drafter: { id: number; type: 'user' | 'child' },
-  participants: Participant[],
+  drafter: InviteeKey,
+  participants: InviteeKey[],
   exclusions: Exclusion[],
   alreadyAssignedPairings: Pairing[],
-): Participant[] {
+): InviteeKey[] {
   return participants.filter(participant =>
-    !(participant.invitee_id === drafter.id && participant.type === drafter.type) &&
+    !(participant.id === drafter.id && participant.type === drafter.type) &&
     !exclusions.some(exclusion =>
       exclusion.invitee_id === drafter.id &&
       exclusion.invitee_type === drafter.type &&
-      exclusion.excluded_invitee_id === participant.invitee_id &&
+      exclusion.excluded_invitee_id === participant.id &&
       exclusion.excluded_invitee_type === participant.type
     ) &&
     !alreadyAssignedPairings.some(pairing =>
-      pairing.receiver_id === participant.invitee_id && pairing.receiver_type === participant.type
+      pairing.receiver_id === participant.id && pairing.receiver_type === participant.type
     )
   );
 }
 
 export function assignPairings(
-  givers: Participant[],
-  receivers: Participant[],
+  givers: InviteeKey[],
+  receivers: InviteeKey[],
   exclusions: Exclusion[],
   currentAssignments: Pairing[] = [],
 ): { pairings: Pairing[], success: boolean } {
@@ -33,22 +33,22 @@ export function assignPairings(
     return { pairings: currentAssignments.slice(), success: true };
   }
   const nextGiver = givers.find(giver =>
-    !currentAssignments.some(assignment => assignment.giver_id === giver.invitee_id && assignment.giver_type === giver.type)
+    !currentAssignments.some(assignment => assignment.giver_id === giver.id && assignment.giver_type === giver.type)
   );
   if (!nextGiver) {
     return { pairings: currentAssignments.slice(), success: false };
   }
   const possibleReceivers = shuffleArray(possibleDraws(
-    { id: nextGiver.invitee_id, type: nextGiver.type },
+    { id: nextGiver.id, type: nextGiver.type },
     receivers,
     exclusions,
     currentAssignments
   ));
   for (const receiver of possibleReceivers) {
     currentAssignments.push({
-      giver_id: nextGiver.invitee_id,
+      giver_id: nextGiver.id,
       giver_type: nextGiver.type,
-      receiver_id: receiver.invitee_id,
+      receiver_id: receiver.id,
       receiver_type: receiver.type });
     const result = assignPairings(givers, receivers, exclusions, currentAssignments);
     if (result.success) {
@@ -62,7 +62,7 @@ export function assignPairings(
 // Helper to run the full draft for an event (participants, exclusions fetched outside)
 export async function runDraft(
   eventId: number,
-  participants: Participant[],
+  participants: InviteeKey[],
   exclusions: Exclusion[],
 ): Promise<{ success: boolean; pairings?: Pairing[]; error?: string }> {
   const { pairings, success } = assignPairings(
@@ -72,7 +72,9 @@ export async function runDraft(
     []
   );
   if (!success || !pairings) {
-    return { success: false, error: "No valid assignment possible for this event." };
+    console.log(success)
+    console.log('byby')
+    return { success: false, error: "No valid assignment possible for this event from draft." };
   }
   // Remove old pairings for this event
   await query(`DELETE FROM pairings WHERE event_id = $1`, [eventId]);

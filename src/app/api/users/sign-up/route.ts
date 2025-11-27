@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { query } from "@/lib/db";
 import bcrypt from 'bcrypt';
+import { userRepository } from "@/repositories/UserRepository";
 
 export async function POST(request: Readonly<Request>) {
   try {
@@ -20,19 +20,9 @@ export async function POST(request: Readonly<Request>) {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const insertQuery = `
-      INSERT INTO users (username, email, password_hash)
-      VALUES ($1, $2, $3)
-      RETURNING *`;
+    const newUser = await userRepository.create({username: username, email: email, password_hash: hashedPassword});
 
-    const result = await query(insertQuery, [
-      username,
-      email,
-      hashedPassword,
-    ]);
-
-    const newUser = result.rows[0] as { id: number; username: string; email: string };
-    return NextResponse.json({ user: { id: newUser.id, username: newUser.username, email: newUser.email } }, { status: 201 });
+    return NextResponse.json({ user: newUser }, { status: 201 });
   } catch (error) {
     console.error('User sign up error', error);
     return NextResponse.json({error: 'Internal server error'}, {status: 500})

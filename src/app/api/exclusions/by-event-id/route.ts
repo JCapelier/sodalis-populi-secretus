@@ -1,48 +1,39 @@
 
 import { NextRequest, NextResponse } from "next/server";
-import { query } from "@/lib/db";
+import { Exclusion, ExclusionWithReciprocal } from "@/type";
+import { exclusionRepository } from "@/repositories/ExclusionRepository";
+import { buildReciprocalExclusion } from "@/utils/build-reciprocal";
+import { isSameExclusion } from "@/utils/comparison-helper";
 
-export async function GET(req: NextRequest) {
-  const eventId = req.nextUrl.searchParams.get("event-id");
+export async function GET(request: NextRequest) {
+  const eventId = Number(request.nextUrl.searchParams.get("event-id"));
   if (!eventId) {
     return NextResponse.json({ error: "Missing event-id" }, { status: 400 });
   }
   // Return all exclusion fields needed for the form (no reciprocal, it's frontend-only)
-  const exclusions = await query<{
-    invitee_id: number;
-    invitee_type: 'user' | 'child';
-    excluded_invitee_id: number;
-    excluded_invitee_type: 'user' | 'child';
-  }>(
-    `SELECT invitee_id, invitee_type, excluded_invitee_id, excluded_invitee_type FROM exclusions WHERE event_id = $1`,
-    [eventId]
-  );
-  return NextResponse.json(exclusions.rows);
+  const exclusions = await exclusionRepository.findByEventId(eventId);
+  return NextResponse.json(exclusions);
 }
 
-export async function PUT(req: NextRequest) {
-  const eventId = req.nextUrl.searchParams.get("event-id");
-  if (!eventId) {
-    return NextResponse.json({ error: "Missing event-id" }, { status: 400 });
-  }
-  const exclusions = await req.json();
-  if (!Array.isArray(exclusions)) {
-    return NextResponse.json({ error: "Invalid exclusions array" }, { status: 400 });
-  }
+export async function PUT(request: NextRequest) {
+  const eventId = Number(request.nextUrl.searchParams.get("event-id"));
+
+  const exclusions: ExclusionWithReciprocal[] = await request.json();
+
   // Remove all existing exclusions for this event
-  await query(`DELETE FROM exclusions WHERE event_id = $1`, [eventId]);
+  await exclusionRepository.deleteByEventId(eventId);
+
   // Insert new exclusions
-  for (const ex of exclusions) {
-    if (
-      typeof ex.user_id === "number" &&
-      typeof ex.excluded_user_id === "number" &&
-      ex.user_id !== ex.excluded_user_id
-    ) {
-      await query(
-        `INSERT INTO exclusions (event_id, user_id, excluded_user_id) VALUES ($1, $2, $3)`,
-        [eventId, ex.user_id, ex.excluded_user_id]
-      );
+  const fullExclusions: Exclusion[] = [];
+  for (const exclusion of exclusions) {
+    fullExclusions.push(exclusion)
+    if (exclusion.reciprocal) {
+      const reciprocalExclusion = buildReciprocalExclusion(exclusion);
+      if (!fullExclusions.some((fullExclusion) => isSameExclusion(fullExclusion, reciprocalExclusion))) fullExclusions.push(reciprocalExclusion);
     }
   }
-  return NextResponse.json({ success: true });
+
+  for (const fullExclusion of fullExclusions) await exclusionRepository.create({...fullExclusion, event_id: eventId})
+
+  return NextResponse.json(fullExclusions);
 }
