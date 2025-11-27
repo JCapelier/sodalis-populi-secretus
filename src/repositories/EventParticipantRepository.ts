@@ -3,12 +3,12 @@ import { InviteeType, Participant, Status } from "@/type";
 
 export class EventParticipantRepository {
 
-  async findById(id: number): Promise<Participant | null> {
+  async findByInvitee(id: number, type: InviteeType): Promise<Participant[] | null> {
     const result = await query<Participant>(
-      `SELECT * FROM event_participants WHERE id = $1`,
-      [id]
+      `SELECT * FROM event_participants WHERE invitee_id = $1 AND type = $2`,
+      [id, type]
     );
-    return result.rows[0] || null;
+    return result.rows || null;
   }
 
   async findByEventId(eventId: number): Promise<Participant[]> {

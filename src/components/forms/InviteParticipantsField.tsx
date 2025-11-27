@@ -2,19 +2,30 @@ import { Child, InviteeSearchResult, Participant } from "@/type";
 import React, { useState, useRef } from "react";
 
 type InviteParticipantsFieldProps = {
-  onInvite: (user: Participant) => void;
-  searchEndPoint: string;
-
+	onInvite: (user: Participant) => void;
+	searchEndPoint: string;
+	prefill?: Participant;
 };
 
-const InviteParticipantsField: React.FC<InviteParticipantsFieldProps> = ({ onInvite, searchEndPoint }) => {
 
-	const [username, setUsername] = useState("");
+const InviteParticipantsField: React.FC<InviteParticipantsFieldProps> = ({ onInvite, searchEndPoint, prefill }) => {
+	const [username, setUsername] = useState(prefill?.username || "");
 	const [error, setError] = useState<string | null>(null);
 	const [suggestions, setSuggestions] = useState<InviteeSearchResult[]>([]);
 	const [showSuggestions, setShowSuggestions] = useState(false);
 	const [parentNames, setParentNames] = useState<Record<number, string>>({});
 	const inputRef = useRef<HTMLInputElement>(null);
+
+	// Always reflect prefill in the input value
+	React.useEffect(() => {
+    console.log(prefill)
+    if (prefill && prefill.username) {
+			setUsername(prefill.username);
+			onInvite(prefill);
+		} else if (!prefill) {
+			setUsername("");
+		}
+	}, [prefill, onInvite]);
 
 	// Fetch suggestions as user types
 	const handleInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -30,8 +41,7 @@ const InviteParticipantsField: React.FC<InviteParticipantsFieldProps> = ({ onInv
 		try {
 			const result = await fetch(`${searchEndPoint}?search=${encodeURIComponent(value)}`);
 			const data = await result.json();
-      console.log(data)
-      const suggestions = data.suggestions;
+			const suggestions = data.suggestions;
 			if (result.ok && Array.isArray(suggestions)) {
 				setSuggestions(suggestions);
 				setShowSuggestions(true);
@@ -68,7 +78,7 @@ const InviteParticipantsField: React.FC<InviteParticipantsFieldProps> = ({ onInv
 
 	// Handle selecting a suggestion
 	const handleSelect = (user: InviteeSearchResult) => {
-		setUsername('');
+		setUsername(user.username);
 		setSuggestions([]);
 		setShowSuggestions(false);
 		// Map API result to correct structure
@@ -90,12 +100,13 @@ const InviteParticipantsField: React.FC<InviteParticipantsFieldProps> = ({ onInv
 				ref={inputRef}
 				type="text"
 				value={username}
-				onChange={handleInputChange}
+				onChange={prefill ? undefined : handleInputChange}
 				onFocus={() => setShowSuggestions(suggestions.length > 0)}
 				onBlur={handleBlur}
 				placeholder="Enter username to invite"
 				className="border rounded px-2 py-1 w-full text-black"
 				autoComplete="off"
+				disabled={!!prefill}
 			/>
 			{showSuggestions && (
 				<ul className="absolute z-10 bg-white border rounded w-full mt-1 max-h-40 overflow-y-auto shadow">

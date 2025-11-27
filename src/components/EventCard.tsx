@@ -86,7 +86,9 @@ export default function EventCard({ name, endsAt, priceLimitCents, adminName, ev
                 <EditEventButton eventId={eventId} />
               </>
             )}
-            {eventParticipants.some(p => p.invitee_id === currentUserId && p.type === 'user') && (
+            {(eventParticipants.some(p => p.invitee_id === currentUserId && p.type === 'user')
+              || (childDraft.option && childDraft.childId && eventParticipants.some(p => p.invitee_id === childDraft.childId && p.type === 'child'))
+            ) && (
               <DraftButton eventId={eventId} currentUserId={currentUserId} childDraft={childDraft} />
             )}
             {Number(currentUserId) === Number(adminId) && (
