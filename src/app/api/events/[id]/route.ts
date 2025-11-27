@@ -60,7 +60,7 @@ export async function PUT(request: Request, context: {params: Promise<{id: strin
     // 2. Remove participants not in the new list
     for (const previousParticipantKey of previousParticipantsKeys) {
       if (!newParticipantsKeys.some(p => p.id === previousParticipantKey.id && p.type === previousParticipantKey.type)) {
-        await eventParticipantRepository.delete(previousParticipantKey.id);
+        await eventParticipantRepository.deleteByInviteeIdAndType(previousParticipantKey.id, previousParticipantKey.type);
       }
     }
 

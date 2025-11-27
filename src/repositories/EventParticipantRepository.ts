@@ -53,6 +53,12 @@ export class EventParticipantRepository {
   async delete(id: number): Promise<void> {
     await query(`DELETE FROM event_participants WHERE id = $1`, [id]);
   }
+
+  async deleteByInviteeIdAndType(id: number, type: InviteeType): Promise<void> {
+    await query(`DELETE FROM event_participants WHERE invitee_id = $1 AND type = $2`,
+      [id, type]
+    )
+  }
 }
 
 export const eventParticipantRepository = new EventParticipantRepository();
