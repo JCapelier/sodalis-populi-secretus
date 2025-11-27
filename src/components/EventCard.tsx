@@ -81,7 +81,9 @@ export default function EventCard({ name, endsAt, priceLimitCents, adminName, ev
           )}
           <div className="flex gap-2 mt-4">
             {Number(currentUserId) === Number(adminId) && <EditEventButton eventId={eventId} />}
-            <DraftButton eventId={eventId} currentUserId={currentUserId} childDraft={childDraft} />
+            {eventParticipants.some(p => p.invitee_id === currentUserId && p.type === 'user') && (
+              <DraftButton eventId={eventId} currentUserId={currentUserId} childDraft={childDraft} />
+            )}
           </div>
         </div>
       )}
