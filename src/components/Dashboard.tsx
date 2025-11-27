@@ -1,12 +1,12 @@
 'use client';
 import React from "react";
 import { useRouter } from "next/navigation";
-// Removed UserContext usage
 import { useSession, signOut } from "next-auth/react";
 import AddChildButton from "./AddChildButton";
+import EditChildModal from "./EditChildModal";
 import { FaCog } from "react-icons/fa";
 import ChangeUsernameModal from "./ChangeUsernameModal";
-import { apiPut } from "@/lib/api";
+import { apiDelete, apiGet, apiPut } from "@/lib/api";
 import ChangePasswordModal from "./ChangePasswordModal";
 
 interface DashboardProps {
@@ -22,6 +22,8 @@ const Dashboard: React.FC<DashboardProps> = ({ childrenList }) => {
   const router = useRouter();
   const userId = session?.user?.id ? session.user.id : null;
   const children = childrenList || [];
+  const [editingChild, setEditingChild] = React.useState<null | { id: number; username?: string; name?: string; parent_id?: number; other_parent_id?: number; other_parent_username?: string }>(null);
+  const [deleteError, setDeleteError] = React.useState<string | undefined>(undefined);
   const [settingsOpen, setSettingsOpen] = React.useState(false);
   const [showChangeUsername, setShowChangeUsername] = React.useState(false);
   const [showChangePassword, setShowChangePassword] = React.useState(false);
@@ -113,10 +115,46 @@ const Dashboard: React.FC<DashboardProps> = ({ childrenList }) => {
           <div className="font-semibold text-gray-700 mb-1">Your children:</div>
           <ul className="flex flex-wrap gap-2 justify-center">
             {children.map((child) => (
-              <li key={child.id} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+              <li
+                key={child.id}
+                className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium cursor-pointer hover:bg-blue-200 transition"
+                onClick={async () => {
+                  const other_parent_username_resp = await apiGet(`/api/children/${child.id}/parents/other-parent-username`);
+                  const other_parent_username = typeof other_parent_username_resp === 'string' ? other_parent_username_resp : undefined;
+                  setEditingChild({ ...child, other_parent_username });
+                }}
+                title="Edit child"
+              >
                 {child.username || child.name}
               </li>
             ))}
+            {editingChild && (
+              <EditChildModal
+                isOpen={!!editingChild}
+                onClose={() => { setEditingChild(null); setDeleteError(undefined); }}
+                child={editingChild}
+                deleteError={deleteError}
+                onSave={async (updated) => {
+                  await apiPut(`/api/children/${editingChild.id}`, {
+                    username: updated.username,
+                    parent_id: editingChild.parent_id,
+                    other_parent_id: updated.other_parent_id,
+                  });
+                  setEditingChild(null);
+                  router.refresh();
+                }}
+                onDelete={async () => {
+                  try {
+                    await apiDelete(`/api/children/${editingChild.id}`);
+                    setEditingChild(null);
+                    setDeleteError(undefined);
+                    router.refresh();
+                  } catch (err: any) {
+                    setDeleteError(err.message || 'Delete failed');
+                  }
+                }}
+              />
+            )}
           </ul>
         </div>
       )}

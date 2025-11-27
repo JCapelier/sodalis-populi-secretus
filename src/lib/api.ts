@@ -24,9 +24,10 @@ export async function apiPut<T>(url: string, data: unknown): Promise<T> {
   return res.json();
 }
 
-export async function apiDelete<T>(url: string): Promise<T> {
+export async function apiDelete<T>(url: string): Promise<T | void> {
   const res = await fetch(url, { method: 'DELETE' });
   if (!res.ok) throw new Error(await getError(res));
+  if (res.status === 204) return;
   return res.json();
 }
 

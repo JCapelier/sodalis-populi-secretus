@@ -24,6 +24,19 @@ export async function GET(request: Request, context: {params: Promise<{id: strin
   }
 }
 
+export async function DELETE(request: Request, context: {params: Promise<{id: string}>}) {
+  const params = await context.params;
+  const id = Number(params.id);
+
+  try {
+    await eventRepository.delete(id);
+    return new NextResponse(null, { status: 204 }); // No Content
+  } catch (error) {
+    console.error('Delete event error', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
 export async function PUT(request: Request, context: {params: Promise<{id: string}>}) {
   const params = await context.params;
   const id = Number(params.id);

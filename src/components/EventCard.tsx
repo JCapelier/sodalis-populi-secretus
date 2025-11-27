@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import EditEventButton from "./EditEventButton";
 import DraftButton from "./DraftButton";
+import DeleteEventButton from "./DeleteEventButton";
 import { Exclusion, Participant } from "@/type";
 
 interface EventCardProps {
@@ -20,7 +21,7 @@ interface EventCardProps {
 export default function EventCard({ name, endsAt, priceLimitCents, adminName, eventId, adminId, currentUserId, childDraft, eventParticipants = [], eventExclusions = [] }: EventCardProps) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="bg-white border border-gray-400 rounded-xl p-5 mb-4 shadow-md">
+    <div className="bg-white border border-gray-400 rounded-xl p-5 mb-4 shadow-md relative">
       <div className="flex items-center justify-between cursor-pointer" onClick={() => setOpen(o => !o)}>
         <h2 className="text-lg font-bold text-gray-900 mb-0">{name}</h2>
         <button className="ml-2 px-3 py-1 rounded bg-gray-200 text-gray-800 text-xs font-semibold shadow-sm border border-gray-300">
@@ -79,10 +80,21 @@ export default function EventCard({ name, endsAt, priceLimitCents, adminName, ev
               </ul>
             </div>
           )}
-          <div className="flex gap-2 mt-4">
-            {Number(currentUserId) === Number(adminId) && <EditEventButton eventId={eventId} />}
-            {eventParticipants.some(p => p.invitee_id === currentUserId && p.type === 'user') && (
+          <div className="flex gap-2 mt-4 items-center">
+            {Number(currentUserId) === Number(adminId) && (
+              <>
+                <EditEventButton eventId={eventId} />
+              </>
+            )}
+            {(eventParticipants.some(p => p.invitee_id === currentUserId && p.type === 'user')
+              || (childDraft.option && childDraft.childId && eventParticipants.some(p => p.invitee_id === childDraft.childId && p.type === 'child'))
+            ) && (
               <DraftButton eventId={eventId} currentUserId={currentUserId} childDraft={childDraft} />
+            )}
+            {Number(currentUserId) === Number(adminId) && (
+              <div className="flex-1 flex justify-end">
+                <DeleteEventButton eventId={eventId} />
+              </div>
             )}
           </div>
         </div>
