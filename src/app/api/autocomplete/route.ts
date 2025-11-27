@@ -4,9 +4,9 @@ import { userRepository } from "@/repositories/UserRepository";
 export async function GET(request: Readonly<Request>) {
   try {
     const { searchParams } = new URL(request.url);
-    const search = searchParams.get('search');
+    const search = searchParams.get('search') || '';
 
-    const suggestions = await userRepository.findUsersByPartialUsernam(search);
+    const suggestions = await userRepository.findUsersByPartialUsername(search);
 
     if (!suggestions) {
       return NextResponse.json({ error: 'No user corresponding to this username' }, { status: 404 });

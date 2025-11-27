@@ -3,7 +3,7 @@ import { hasValidAssignment } from "@/utils/form-validation-helper";
 import { runDraft } from "@/utils/draft-helper";
 import { eventRepository } from "@/repositories/EventRepository";
 import { eventParticipantRepository } from "@/repositories/EventParticipantRepository";
-import { Exclusion, ExclusionWithReciprocal } from "@/type";
+import { Exclusion, ExclusionWithReciprocal, Participant, Status } from "@/type";
 import { buildReciprocalExclusion } from "@/utils/build-reciprocal";
 import { isSameExclusion } from "@/utils/comparison-helper";
 import { exclusionRepository } from "@/repositories/ExclusionRepository";
@@ -20,32 +20,37 @@ export async function POST(request: Readonly<Request>) {
       return NextResponse.json({ error: 'Event must end at a valid date' }, { status: 400 });
     }
 
+    // Prepare exclusions (with reciprocals) before any DB writes
+    const exclusions: ExclusionWithReciprocal[] = [];
+    for (const exclusion of body.exclusions) {
+      exclusions.push({ ...exclusion });
+      if (exclusion.reciprocal) {
+        const reciprocalExclusion = buildReciprocalExclusion(exclusion);
+        if (!body.exclusions.some((exclusion: Exclusion) => isSameExclusion(exclusion, reciprocalExclusion))) exclusions.push({ ...reciprocalExclusion });
+      }
+    }
+
+    const inviteeKeys = body.participants.map((p: Participant) => ({ id: p.invitee_id, type: p.type }));
+    if (!hasValidAssignment(inviteeKeys, exclusions)) {
+      return NextResponse.json({ error: "No valid assignment possible with these exclusions." }, { status: 400 });
+    }
+
+    // Only now create event and related records
     const event = await eventRepository.create(body);
     const eventId = event.id;
 
     for (const participant of body.participants) {
-      await eventParticipantRepository.create(participant);
-    }
-
-    // To avoid duplicate reciprocal insertions, keep a Set of processed pairs
-    const exclusions: ExclusionWithReciprocal[] = [];
-    for (const exclusion of body.exclusions) {
-      exclusions.push(exclusion);
-      if (exclusion.reciprocal) {
-        const reciprocalExclusion = buildReciprocalExclusion(exclusion);
-        if (!body.exclusions.some((exclusion: Exclusion) => isSameExclusion(exclusion, reciprocalExclusion))) exclusions.push(reciprocalExclusion);
-      }
+      await eventParticipantRepository.create({ ...participant, event_id: eventId, status: Status.Invited });
     }
 
     for (const exclusion of exclusions) {
-      exclusionRepository.create({...exclusion, event_id: eventId});
+      await exclusionRepository.create({ ...exclusion, event_id: eventId });
     }
 
-    if (!hasValidAssignment(body.participants, exclusions)) {
-      return NextResponse.json({ error: "No valid assignment possible with these exclusions." }, { status: 400 });
+    const draftResult = await runDraft(eventId, inviteeKeys, exclusions);
+    if (!draftResult.success) {
+      return NextResponse.json({ error: draftResult.error || "Draft failed" }, { status: 400 });
     }
-
-    await runDraft(eventId, body.participants, exclusions);
 
     return NextResponse.json({ event: event }, { status: 201 });
   } catch (error) {

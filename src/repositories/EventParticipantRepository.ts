@@ -22,14 +22,14 @@ export class EventParticipantRepository {
   async create(data: {
     event_id: number;
     invitee_id: number;
-    invitee_type: InviteeType;
+    type: InviteeType;
     status: Status;
   }): Promise<Participant> {
     const result = await query<Participant>(
-      `INSERT INTO event_participants (event_id, invitee_id, invitee_type, status)
+      `INSERT INTO event_participants (event_id, invitee_id, type, status)
        VALUES ($1, $2, $3, $4)
        RETURNING *`,
-      [data.event_id, data.invitee_id, data.invitee_type, data.status]
+      [data.event_id, data.invitee_id, data.type, data.status]
     );
     return result.rows[0];
   }
@@ -37,15 +37,15 @@ export class EventParticipantRepository {
   async update(id: number, data: {
     event_id: number;
     invitee_id: number;
-    invitee_type: InviteeType;
+    type: InviteeType;
     status: Status;
   }): Promise<Participant> {
     const result = await query<Participant>(
       `UPDATE event_participants
-       SET event_id = $1, invitee_id = $2, invitee_type = $3, status = $5
+       SET event_id = $1, invitee_id = $2, type = $3, status = $5
        WHERE id = $5
        RETURNING *`,
-      [data.event_id, data.invitee_id, data.invitee_type, data.status, id]
+      [data.event_id, data.invitee_id, data.type, data.status, id]
     );
     return result.rows[0];
   }

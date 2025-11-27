@@ -37,14 +37,14 @@ export class UserRepository {
     return result.rows[0];
   }
 
-  async findUsersByPartialUsernam(partialUsername: string | null) {
+  async findUsersByPartialUsername(partialUsername: string) {
     const result = await query<{id: number, type: InviteeType, username: string}>(
       `SELECT id, username, 'user' AS type FROM users WHERE username ILIKE $1`,
       [`%${partialUsername}%`]
     );
     return result.rows;
   }
-  
+
   async getPasswordHashById(id: number): Promise<string> {
     const result = await query<{password_hash: string}>(
       `SELECT password_hash FROM users WHERE id = $1`,
