@@ -1,10 +1,14 @@
 'use client';
 import { validateSignUp } from "@/utils/form-validation-helper";
 import { useState } from "react";
+import { signIn } from "next-auth/react";
 
-export default function SignUpForm() {
+interface SignUpFormProps {
+  onSuccess?: (userId: number) => void;
+}
+
+export default function SignUpForm({ onSuccess }: SignUpFormProps) {
   const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
@@ -15,7 +19,7 @@ export default function SignUpForm() {
     setError('');
     setSuccess('');
 
-    const errorMessage = validateSignUp({username, email, password, confirmPassword})
+    const errorMessage = validateSignUp({username, password, confirmPassword})
     if (errorMessage) {
       setError(errorMessage);
       return;
@@ -23,7 +27,6 @@ export default function SignUpForm() {
 
     const payload = {
       username: username.trim(),
-      email: email.trim(),
       password,
     };
 
@@ -39,41 +42,61 @@ export default function SignUpForm() {
     } else {
       setSuccess('User signed up');
       setUsername('');
-      setEmail('');
       setPassword('');
       setConfirmPassword('');
+      // Automatically sign in the user after sign up
+      if (formData.user && formData.user.id) {
+        await signIn("credentials", {
+          username: payload.username,
+          password: payload.password,
+          redirect: false,
+        });
+        if (onSuccess) {
+          onSuccess(formData.user.id);
+        }
+      }
     }
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div>
-        <label>
-          Username:
-          <input value={username} onChange={event => setUsername(event.target.value)} required />
-        </label>
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full">
+      <div className="flex flex-col gap-1">
+        <label className="text-sm font-medium text-gray-700">Username</label>
+        <input
+          className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          value={username}
+          onChange={event => setUsername(event.target.value)}
+          required
+        />
       </div>
-      <div>
-        <label>
-          Email:
-          <input value={email} onChange={event => setEmail(event.target.value)} required />
-        </label>
+      <div className="flex flex-col gap-1">
+        <label className="text-sm font-medium text-gray-700">Password</label>
+        <input
+          type="password"
+          className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          value={password}
+          onChange={event => setPassword(event.target.value)}
+          required
+        />
       </div>
-      <div>
-        <label>
-          Password:
-          <input value={password} onChange={event => setPassword(event.target.value)} />
-        </label>
+      <div className="flex flex-col gap-1">
+        <label className="text-sm font-medium text-gray-700">Confirm password</label>
+        <input
+          type="password"
+          className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          value={confirmPassword}
+          onChange={event => setConfirmPassword(event.target.value)}
+          required
+        />
       </div>
-      <div>
-        <label>
-          Confirm password:
-          <input value={confirmPassword} onChange={event => setConfirmPassword(event.target.value)} />
-        </label>
-      </div>
-      <button type="submit">Sign up</button>
-      {error && <div style={{ color: 'red' }}>{error}</div>}
-      {success && <div style={{ color: 'green' }}>{success}</div>}
+      <button
+        type="submit"
+        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded transition"
+      >
+        Sign up
+      </button>
+      {error && <div className="text-red-500 text-sm text-center">{error}</div>}
+      {success && <div className="text-green-600 text-sm text-center">{success}</div>}
     </form>
   );
 }

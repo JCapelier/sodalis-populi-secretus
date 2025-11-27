@@ -4,6 +4,7 @@ import { query } from "@/lib/db";
 import bcrypt from "bcrypt";
 import type { SessionStrategy } from "next-auth";
 import type { JWT } from "next-auth/jwt";
+import { redirect } from "next/dist/server/api-utils";
 
 // Export the config object as authOptions
 export const authOptions = {
@@ -24,13 +25,12 @@ export const authOptions = {
         const user = userResult.rows[0] as {
           id: number;
           username: string;
-          email: string;
           password_hash: string;
         };
         if (!user) return null;
         const isValid = await bcrypt.compare(password, user.password_hash);
         if (!isValid) return null;
-        return { id: String(user.id), username: user.username, email: user.email };
+        return { id: String(user.id), username: user.username, email: "" };
       },
     }),
   ],
@@ -38,10 +38,9 @@ export const authOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   callbacks: {
     async jwt({ token, user }: { token: JWT; user?: unknown }) {
-      if (user && typeof user === 'object' && 'id' in user && 'username' in user && 'email' in user) {
+      if (user && typeof user === 'object' && 'id' in user && 'username' in user) {
         token.id = user.id as string;
         token.username = user.username as string;
-        token.email = user.email as string;
       }
       return token;
     },
@@ -53,10 +52,13 @@ export const authOptions = {
       if (sess.user && token.username) {
         sess.user.username = token.username as string;
       }
-      if (sess.user && token.email) {
-        sess.user.email = token.email as string;
-      }
       return sess;
+    },
+    async redirect({ url, baseUrl, token }) {
+      if (token && token.id) {
+        return `/users/${token.id}`;
+      }
+      return baseUrl;
     },
   },
 };

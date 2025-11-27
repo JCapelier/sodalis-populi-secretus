@@ -26,8 +26,6 @@ export default function SignInForm() {
       const userId = session?.user?.id;
       if (userId) {
         router.push(`/users/${userId}`);
-      } else {
-        router.push("/events"); // fallback
       }
     }
   }

@@ -55,14 +55,13 @@ export class UserRepository {
 
   async create(data: {
     username: string;
-    email: string;
     password_hash: string;
   }): Promise<User> {
     const result = await query<User>(
-      `INSERT INTO users (username, email, password_hash)
-       VALUES ($1, $2, $3)
+      `INSERT INTO users (username, password_hash)
+       VALUES ($1, $2)
        RETURNING id, username`,  // Only return safe fields
-      [data.username, data.email, data.password_hash]
+      [data.username, data.password_hash]
     );
     return result.rows[0];
   }

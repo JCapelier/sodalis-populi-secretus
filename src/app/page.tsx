@@ -1,9 +1,20 @@
-import React from "react";
+'use client';
+import React, { useState } from "react";
 import Banner from "@/components/Banner";
 import SignInForm from "@/components/forms/SignInForm";
-import Link from "next/link";
+import SignUpModal from "@/components/SignUpModal";
+
+import { useRouter } from "next/navigation";
 
 export default function HomePage() {
+  const [showSignUp, setShowSignUp] = useState(false);
+  const router = useRouter();
+
+  function handleSignUpSuccess(userId: number) {
+    setShowSignUp(false);
+    router.push(`/users/${userId}`);
+  }
+
   return (
     <main className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
       <Banner />
@@ -14,13 +25,15 @@ export default function HomePage() {
         <SignInForm />
         <div className="text-center text-gray-600">
           Don&apos;t have an account yet?
-          <Link href="/users/sign-up">
-            <button className="ml-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
-              Sign up
-            </button>
-          </Link>
+          <button
+            className="ml-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+            onClick={() => setShowSignUp(true)}
+          >
+            Sign up
+          </button>
         </div>
       </div>
+      <SignUpModal isOpen={showSignUp} onClose={() => setShowSignUp(false)} onSuccess={handleSignUpSuccess} />
     </main>
   );
 }
