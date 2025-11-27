@@ -45,7 +45,7 @@ export type EventParticipantFull = {
   status: Status;
 }
 
-export type Exclusion = { id?: number, invitee_id: number; invitee_type: InviteeType, excluded_invitee_id: number; excluded_invitee_type: InviteeType, event_id: number };
+export type Exclusion = { id?: number, invitee_id: number; invitee_type: InviteeType, excluded_invitee_id: number; excluded_invitee_type: InviteeType, event_id?: number };
 export type Participant = { invitee_id: number; type: InviteeType, username: string };
 export type Pairing = { giver_id: number; giver_type: InviteeType, receiver_id: number; receiver_type: InviteeType,}
 
