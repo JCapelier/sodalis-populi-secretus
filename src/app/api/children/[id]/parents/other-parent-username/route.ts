@@ -1,6 +1,5 @@
 import { childRepository } from "@/repositories/ChildRepository";
 import { userRepository } from "@/repositories/UserRepository";
-import { NextResponse } from "next/server";
 
 export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
   const params = await context.params;

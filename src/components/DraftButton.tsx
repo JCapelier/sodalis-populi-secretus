@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, } from "react";
+import { getFamilyJoke } from "@/utils/family-jokes";
 import { useSession } from "next-auth/react";
 import { apiGet } from "@/lib/api";
 
@@ -9,7 +10,11 @@ interface DraftButtonProps {
   childDraft: {option: boolean, childId?: number}
 }
 
-const DraftButton: React.FC<DraftButtonProps> = ({ eventId, currentUserId, childDraft }) => {
+interface DraftButtonPropsWithLimit extends DraftButtonProps {
+  priceLimitCents?: number | null;
+}
+
+const DraftButton: React.FC<DraftButtonPropsWithLimit> = ({ eventId, currentUserId, childDraft, priceLimitCents }) => {
   const [open, setOpen] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -75,7 +80,15 @@ const DraftButton: React.FC<DraftButtonProps> = ({ eventId, currentUserId, child
             {loading && <div className="text-blue-700 font-semibold">Loading...</div>}
             {error && <div className="text-red-500 font-semibold">{error}</div>}
             {result && (
-              <pre className="bg-blue-50 border border-blue-200 p-4 rounded text-base text-blue-900 font-mono overflow-x-auto max-h-80 text-center shadow-inner">{result}</pre>
+              <>
+                <pre className="bg-blue-50 border border-blue-200 p-4 rounded text-base text-blue-900 font-mono overflow-x-auto max-h-80 text-center shadow-inner">{result}</pre>
+                {/* Custom joke/message for family users */}
+                {getFamilyJoke(session?.user?.username, result, priceLimitCents) && (
+                  <div className="mt-4 text-center text-green-700 font-semibold text-base">
+                    {getFamilyJoke(session?.user?.username, result, priceLimitCents)}
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>

@@ -149,8 +149,8 @@ const Dashboard: React.FC<DashboardProps> = ({ childrenList }) => {
                     setEditingChild(null);
                     setDeleteError(undefined);
                     router.refresh();
-                  } catch (err: any) {
-                    setDeleteError(err.message || 'Delete failed');
+                  } catch (error) {
+                    if(error instanceof Error) setDeleteError(error.message || 'Delete failed');
                   }
                 }}
               />
