@@ -8,7 +8,7 @@ interface EventsCategoryProps {
   color: "blue" | "green" | 'purple';
   events: EventInfo[]; // adminId optional for now
   currentUserId?: number;
-  childDraft: {option: boolean, childId?: number};
+  childDraft: {option: boolean, childId?: number, childName?: string};
 }
 
 const colorMap = {
