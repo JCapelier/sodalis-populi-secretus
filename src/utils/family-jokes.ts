@@ -24,5 +24,18 @@ export function getFamilyJoke(username: string | undefined, drafted: string | nu
   if (username === 'pierre') {
     return 'Tu aurais dû prendre ton D6 avec toi!'
   }
+  if (username === 'RATAK') {
+    const url = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+    return url
+  }
+  if (username === 'Garance') {
+    return 'C\'est pas l\'nom d\'une fleur!'
+  }
+  if (username === 'Cosima') {
+    return 'Pour l\'amour et la justice!'
+  }
+  if (username === 'Thalie') {
+    return '❤️💕🐰💕❤️'
+  }
   return null;
 }

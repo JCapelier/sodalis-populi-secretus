@@ -6,8 +6,8 @@ import { apiGet } from "@/lib/api";
 
 interface DraftButtonProps {
   eventId: number;
-  currentUserId: number
-  childDraft: {option: boolean, childId?: number}
+  currentUserId: number;
+  childDraft: { option: boolean; childId?: number; childName?: string };
 }
 
 interface DraftButtonPropsWithLimit extends DraftButtonProps {
@@ -55,6 +55,11 @@ const DraftButton: React.FC<DraftButtonPropsWithLimit> = ({ eventId, currentUser
   const userId = typeof userIdRaw === 'number' ? userIdRaw : Number(userIdRaw);
   const isSignedIn = typeof userId === 'number' && !isNaN(userId) && userId > 0;
 
+  // Determine drafter's name: child name if present, else session user
+  const drafterName = childDraft?.option && childDraft.childName
+    ? childDraft.childName
+    : session?.user?.username;
+
   return (
     <>
       <button
@@ -83,9 +88,19 @@ const DraftButton: React.FC<DraftButtonPropsWithLimit> = ({ eventId, currentUser
               <>
                 <pre className="bg-blue-50 border border-blue-200 p-4 rounded text-base text-blue-900 font-mono overflow-x-auto max-h-80 text-center shadow-inner">{result}</pre>
                 {/* Custom joke/message for family users */}
-                {getFamilyJoke(session?.user?.username, result, priceLimitCents) && (
+                {getFamilyJoke(drafterName, result, priceLimitCents) && (
                   <div className="mt-4 text-center text-green-700 font-semibold text-base">
-                    {getFamilyJoke(session?.user?.username, result, priceLimitCents)}
+                    {(() => {
+                      const joke = getFamilyJoke(drafterName, result, priceLimitCents);
+                      const url = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
+                      if (joke && drafterName === 'RATAK') {
+                        return <span><a href={url} target="_blank" rel="noopener noreferrer">{url}</a></span>;
+                      } else if (joke) {
+                        return <span>{joke}</span>;
+                      } else {
+                        return null;
+                      }
+                    })()}
                   </div>
                 )}
               </>
