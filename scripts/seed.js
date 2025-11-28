@@ -15,8 +15,7 @@ async function main() {
       ($5, $6),
       ($7, $8),
       ($9, $10),
-      ($11, $12),
-      ($13, $14)
+      ($11, $12)
       RETURNING id`,
     [
       'Anne-Laure', 'password',
@@ -25,7 +24,6 @@ async function main() {
       'Flore', 'password',
       'Zachée', 'password',
       'Renaud', 'password',
-      'Esther', 'password',
     ]
   );
 
