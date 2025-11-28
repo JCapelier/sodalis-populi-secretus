@@ -34,8 +34,6 @@ export function hasValidAssignment(
   participants: InviteeKey[],
   exclusions: Exclusion[]
 ): boolean {
-  console.log(participants)
-  console.log(exclusions)
   const n = participants.length;
   if (n < 2) return false;
 
@@ -53,7 +51,6 @@ export function hasValidAssignment(
         ex.excluded_invitee_id === receiver.id &&
         ex.excluded_invitee_type === receiver.type
       ) || isSameInvitee(giver, receiver); // No self-draw
-    console.log('Trying giver', giver, 'receiver', receiver, 'excluded?', result);
     return result;
   }
 
@@ -70,7 +67,6 @@ export function hasValidAssignment(
         used[i] = false;
       }
     }
-    console.log('buidsfbiusd')
     return false;
   }
 

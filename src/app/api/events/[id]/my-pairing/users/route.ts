@@ -14,9 +14,8 @@ export async function GET(request: Request, context: {params: Promise<{id: strin
 
   try {
     const myReceiverKey = await pairingRepository.findReceiverByGiverAndEvent(userId, InviteeType.User, eventId);
-    console.log(myReceiverKey)
     if (!myReceiverKey) return NextResponse.json({ error: "Pairing not found" }, { status: 404 });
-    console.log(myReceiverKey)
+
 
     const myReceiver = myReceiverKey.type === InviteeType.User ? await userRepository.findById(myReceiverKey.id) : await childRepository.findById(myReceiverKey.id)
     if (!myReceiver) {

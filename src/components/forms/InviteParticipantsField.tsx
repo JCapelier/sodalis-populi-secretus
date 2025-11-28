@@ -18,7 +18,6 @@ const InviteParticipantsField: React.FC<InviteParticipantsFieldProps> = ({ onInv
 
 	// Always reflect prefill in the input value
 	React.useEffect(() => {
-    console.log(prefill)
     if (prefill && prefill.username) {
 			setUsername(prefill.username);
 			onInvite(prefill);
