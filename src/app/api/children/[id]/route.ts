@@ -1,6 +1,5 @@
 import { childRepository } from "@/repositories/ChildRepository";
 import { eventParticipantRepository } from "@/repositories/EventParticipantRepository";
-import { eventRepository } from "@/repositories/EventRepository";
 import { userRepository } from "@/repositories/UserRepository";
 import { InviteeType } from "@/type";
 import { NextResponse } from "next/server";
@@ -28,7 +27,8 @@ export async function GET(request: Request, context : {params: Promise<{id: stri
       }),
       { status: 200, headers: { "Content-Type": "application/json" } }
     );
-  } catch (e) {
+  } catch (error) {
+    console.error(error)
     return new Response(JSON.stringify({ error: "Internal server error" }), { status: 500 });
   }
 }
