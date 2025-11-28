@@ -37,5 +37,8 @@ export function getFamilyJoke(username: string | undefined, drafted: string | nu
   if (username === 'Thalie') {
     return '❤️💕🐰💕❤️'
   }
+  if (username === 'Zach') {
+    return 'Faut pas avoir honte de ton frère, un jour, il ressemblera à quelque chose, ce site... On y croit à mort!'
+  }
   return null;
 }
