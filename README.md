@@ -1,7 +1,7 @@
 
-# Secret Santa App
+# Sodalis Populi Secretus
 
-This is a Secret Santa web application built with Next.js (App Router, TypeScript, and PostgreSQL). The project was created as a learning exercise to get familiar with the Next.js framework and modern full-stack development practices.
+This is a Secret Santa (but it doesn't have to be Christmas to make gifts in a group) web application built with Next.js (App Router, TypeScript, and PostgreSQL). The project was created as a learning exercise to get familiar with the Next.js framework and modern full-stack development practices.
 
 ## Features
 - User authentication (NextAuth.js)
