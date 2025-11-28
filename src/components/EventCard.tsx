@@ -15,7 +15,7 @@ interface EventCardProps {
   currentUserId: number;
   eventParticipants?: Participant[];
   eventExclusions?: (Exclusion & { giverUsername?: string; receiverUsername?: string })[];
-  childDraft: {option: boolean, childId?: number}
+  childDraft: {option: boolean, childId?: number, childName?: string}
 }
 
 export default function EventCard({ name, endsAt, priceLimitCents, adminName, eventId, adminId, currentUserId, childDraft, eventParticipants = [], eventExclusions = [] }: EventCardProps) {
