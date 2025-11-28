@@ -72,8 +72,6 @@ export async function runDraft(
     []
   );
   if (!success || !pairings) {
-    console.log(success)
-    console.log('byby')
     return { success: false, error: "No valid assignment possible for this event from draft." };
   }
   // Remove old pairings for this event

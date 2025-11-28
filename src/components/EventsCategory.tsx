@@ -26,6 +26,7 @@ const colorMap = {
 const EventsCategory: React.FC<EventsCategoryProps> = ({ title, color, events, currentUserId, childDraft }) => {
   const [open, setOpen] = useState(true);
   const c = colorMap[color];
+  console.log(events)
 
   return (
     <div className={`mb-8 rounded-xl p-6 shadow-md ${c.bg}`}>
@@ -52,7 +53,9 @@ const EventsCategory: React.FC<EventsCategoryProps> = ({ title, color, events, c
                   adminId={event.admin_id ?? 0}
                   endsAt={event.ends_at ? event.ends_at.toLocaleString() : undefined}
                   currentUserId={currentUserId ?? 0}
-                  childDraft={childDraft}
+                  childDraft={childDraft.option && event.participants.some(p => p.type === 'child')
+                    ? { ...childDraft, option: true }
+                    : { option: false }}
                 />
               </li>
             ))

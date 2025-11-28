@@ -86,7 +86,6 @@ export default function EventCard({ name, endsAt, priceLimitCents, adminName, ev
                 <EditEventButton eventId={eventId} />
               </>
             )}
-            {/* Show DraftButton only if current user or their child is a participant */}
             {(eventParticipants.some(p => p.invitee_id === currentUserId && p.type === 'user')
               || (childDraft.option && childDraft.childId && eventParticipants.some(p => p.invitee_id === childDraft.childId && p.type === 'child'))
             ) && (

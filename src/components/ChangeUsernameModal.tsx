@@ -16,7 +16,6 @@ const ChangeUsernameModal: React.FC<ChangeUsernameModalProps> = ({ isOpen, onClo
   if (!isOpen) return null;
 
   async function handleSubmit(e: React.FormEvent) {
-    console.log(`modal username ${username}`)
     e.preventDefault();
     setError("");
     setSuccess("");
