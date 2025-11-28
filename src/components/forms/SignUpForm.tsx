@@ -63,7 +63,7 @@ export default function SignUpForm({ onSuccess }: SignUpFormProps) {
       <div className="flex flex-col gap-1">
         <label className="text-sm font-medium text-gray-700">Username</label>
         <input
-          className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 text-black"
           value={username}
           onChange={event => setUsername(event.target.value)}
           required
@@ -73,7 +73,7 @@ export default function SignUpForm({ onSuccess }: SignUpFormProps) {
         <label className="text-sm font-medium text-gray-700">Password</label>
         <input
           type="password"
-          className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 text-black"
           value={password}
           onChange={event => setPassword(event.target.value)}
           required
@@ -83,7 +83,7 @@ export default function SignUpForm({ onSuccess }: SignUpFormProps) {
         <label className="text-sm font-medium text-gray-700">Confirm password</label>
         <input
           type="password"
-          className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 text-black"
           value={confirmPassword}
           onChange={event => setConfirmPassword(event.target.value)}
           required

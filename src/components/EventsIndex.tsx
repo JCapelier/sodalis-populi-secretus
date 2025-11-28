@@ -39,7 +39,7 @@ const EventsIndex: React.FC<EventsIndexProps> = ({ managedEvents, participatingE
         color="purple"
         events={childEvents.events}
         currentUserId={currentUserId}
-        childDraft={{option: true, childId: childEvents.child.id}}
+        childDraft={{option: true, childId: childEvents.child.id, childName: childEvents.child.username}}
       />
     ))}
   </div>
