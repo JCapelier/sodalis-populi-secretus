@@ -1,7 +1,6 @@
-import { query } from "@/lib/db";
+import { pairingRepository } from "@/repositories/PairingRepository";
 import { Exclusion, InviteeKey, Pairing } from "@/type";
 import { shuffleArray } from "@/utils/shuffle-array";
-
 
 export function possibleDraws(
   drafter: InviteeKey,
@@ -75,11 +74,17 @@ export async function runDraft(
     return { success: false, error: "No valid assignment possible for this event from draft." };
   }
   // Remove old pairings for this event
-  await query(`DELETE FROM pairings WHERE event_id = $1`, [eventId]);
+  await pairingRepository.deleteByEventId(eventId);
   // Insert new pairings
-  const insertPairingQuery = `INSERT INTO pairings (event_id, giver_id, giver_type, receiver_id, receiver_type) VALUES ($1, $2, $3, $4, $5)`;
   for (const pairing of pairings) {
-    await query(insertPairingQuery, [eventId, pairing.giver_id, pairing.giver_type, pairing.receiver_id, pairing.receiver_type]);
+    const data = {
+      event_id: eventId,
+      giver_id: pairing.giver_id,
+      giver_type: pairing.giver_type,
+      receiver_id: pairing.receiver_id,
+      receiver_type: pairing.receiver_type,
+    }
+    await pairingRepository.create(data);
   }
   return { success: true, pairings };
 }

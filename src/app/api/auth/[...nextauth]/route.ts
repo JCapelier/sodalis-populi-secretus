@@ -4,6 +4,7 @@ import { query } from "@/lib/db";
 import bcrypt from "bcrypt";
 import type { SessionStrategy } from "next-auth";
 import type { JWT } from "next-auth/jwt";
+import { userRepository } from "@/repositories/UserRepository";
 
 // Export the config object as authOptions
 export const authOptions = {
@@ -17,15 +18,7 @@ export const authOptions = {
       async authorize(credentials) {
         if (!credentials) return null;
         const { username, password } = credentials;
-        const userResult = await query(
-          "SELECT * FROM users WHERE username = $1",
-          [username]
-        );
-        const user = userResult.rows[0] as {
-          id: number;
-          username: string;
-          password_hash: string;
-        };
+        const user = await userRepository.findByUsernameForAuth(username);
         if (!user) return null;
         const isValid = await bcrypt.compare(password, user.password_hash);
         if (!isValid) return null;

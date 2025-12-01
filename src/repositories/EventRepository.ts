@@ -2,7 +2,7 @@ import { query } from "@/lib/db";
 import { Event } from "@/type";
 
 export class EventRepository {
-  
+
   async findById(id: number): Promise<Event | null> {
     const result = await query<Event>(
       `SELECT * FROM events WHERE id = $1`,
@@ -22,6 +22,26 @@ export class EventRepository {
       [adminId]
     );
     return result.rows;
+  }
+
+  async findByChildParticipant(childId: number): Promise<Event[]> {
+    const result = await query<Event>(
+      `SELECT e.* FROM events e
+      JOIN event_participants ep ON ep.event_id = e.id
+      WHERE ep.invitee_id = $1 AND ep.type = 'child'`,
+      [childId]
+    )
+    return result.rows
+  }
+
+  async findByUserParticipant(userId: number): Promise<Event[]> {
+    const result = await query<Event>(
+      `SELECT e.* FROM events e
+      JOIN event_participants ep ON ep.event_id = e.id
+      WHERE ep.invitee_id = $1 AND ep.type = 'user' AND e.admin_id != $1`,
+      [userId]
+    )
+    return result.rows
   }
 
   async create(data: {

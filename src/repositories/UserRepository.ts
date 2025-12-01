@@ -45,6 +45,14 @@ export class UserRepository {
     return result.rows;
   }
 
+  async getUsernameById(userId: number): Promise<string> {
+    const result = await query<{username: string}>(
+      `SELECT username FROM users WHERE id = $1`,
+      [userId]
+    )
+    return result.rows[0].username
+  }
+
   async getPasswordHashById(id: number): Promise<string> {
     const result = await query<{password_hash: string}>(
       `SELECT password_hash FROM users WHERE id = $1`,
