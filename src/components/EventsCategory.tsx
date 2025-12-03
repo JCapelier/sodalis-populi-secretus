@@ -1,12 +1,12 @@
 "use client";
 import React, { useState } from "react";
 import EventCard from "@/components/EventCard";
-import type { EventInfo } from "@/type";
+import type { EventInfo, ExclusionWithUsernames, Participant } from "@/type";
 
 interface EventsCategoryProps {
   title: string;
   color: "blue" | "green" | 'purple';
-  events: EventInfo[]; // adminId optional for now
+  events: (EventInfo & { participants: Participant[]; exclusions: ExclusionWithUsernames[] })[];
   currentUserId?: number;
   childDraft: {option: boolean, childId?: number, childName?: string};
 }

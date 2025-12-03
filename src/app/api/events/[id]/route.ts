@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { hasValidAssignment } from "@/utils/form-validation-helper";
-import { runDraft } from "@/utils/draft-helper";
 import { Exclusion, InviteeKey, Participant, Status } from "@/type";
 import { eventRepository } from "@/repositories/EventRepository";
 import { eventParticipantRepository } from "@/repositories/EventParticipantRepository";
 import { exclusionRepository } from "@/repositories/ExclusionRepository";
-import { areSameExclusions, areSameInvitees, isSameExclusion } from "@/utils/comparison-helper";
-import { buildReciprocalExclusion } from "@/utils/build-reciprocal";
+import { ExclusionService } from "@/services/ExclusionService";
+import { InviteeService } from "@/services/InviteeService";
+import { DraftService } from "@/services/DraftService";
+import { AssignmentService } from "@/services/AssignmentService";
 
 export async function GET(request: Request, context: {params: Promise<{id: string}>}) {
   const params = await context.params;
@@ -52,13 +52,13 @@ export async function PUT(request: Request, context: {params: Promise<{id: strin
     for (const exclusion of body.exclusions) {
       exclusions.push({ ...exclusion });
       if (exclusion.reciprocal) {
-        const reciprocalExclusion = buildReciprocalExclusion(exclusion);
-        if (!body.exclusions.some((ex: Exclusion) => isSameExclusion(ex, reciprocalExclusion))) exclusions.push({ ...reciprocalExclusion });
+        const reciprocalExclusion = ExclusionService.buildReciprocalExclusion(exclusion);
+        if (!body.exclusions.some((ex: Exclusion) => ExclusionService.isSameExclusion(ex, reciprocalExclusion))) exclusions.push({ ...reciprocalExclusion });
       }
     }
 
     // Use InviteeKey[] for assignment validation, just like POST
-    if (!hasValidAssignment(newParticipantsKeys, exclusions)) {
+    if (!AssignmentService.hasValidAssignment(newParticipantsKeys, exclusions)) {
       return NextResponse.json({ error: "No valid assignment possible with these exclusions." }, { status: 400 });
     }
 
@@ -81,22 +81,22 @@ export async function PUT(request: Request, context: {params: Promise<{id: strin
 
     // Remove exclusions that are in the DB but not in the new list
     for (const previousExclusion of previousExclusions) {
-      if (!exclusions.find((exclusion) => isSameExclusion(previousExclusion, exclusion))) {
+      if (!exclusions.find((exclusion) => ExclusionService.isSameExclusion(previousExclusion, exclusion))) {
         await exclusionRepository.delete(previousExclusion.id!);
       }
     }
 
     // Add exclusions that are in the new list but not in the DB
     for (const exclusion of exclusions) {
-      const alreadyExists = previousExclusions.some((previousExclusion) => isSameExclusion(previousExclusion, exclusion))
+      const alreadyExists = previousExclusions.some((previousExclusion) => ExclusionService.isSameExclusion(previousExclusion, exclusion))
       if (!alreadyExists) await exclusionRepository.create({...exclusion, event_id: id});
     }
 
-    const inviteesChanged = !areSameInvitees(previousParticipantsKeys, newParticipantsKeys);
-    const exclusionsChanged = !areSameExclusions(previousExclusions, exclusions);
+    const inviteesChanged = !InviteeService.areSameInvitees(previousParticipantsKeys, newParticipantsKeys);
+    const exclusionsChanged = !ExclusionService.areSameExclusions(previousExclusions, exclusions);
 
     if (inviteesChanged || exclusionsChanged) {
-      await runDraft(id, newParticipantsKeys, exclusions);
+      await DraftService.runDraft(id, newParticipantsKeys, exclusions);
     }
 
     const updatedEvent = await eventRepository.findById(id);

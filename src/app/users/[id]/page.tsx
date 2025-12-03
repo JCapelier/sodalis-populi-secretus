@@ -1,14 +1,14 @@
 import React from "react";
 import Dashboard from "@/components/Dashboard";
 import EventsIndex from "@/components/EventsIndex";
-import { getEventInfo } from "@/lib/db";
-import { Child, EventInfo, Event as EventType } from "@/type";
+import { Child, Event as EventType } from "@/type";
 import CreateEventButton from "@/components/CreateEventButton";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { redirect } from "next/navigation";
 import { childRepository } from "@/repositories/ChildRepository";
 import { eventRepository } from "@/repositories/EventRepository";
+import { EventService } from "@/services/EventService";
 
 interface Props {
   params: { id: string };
@@ -34,10 +34,9 @@ export default async function UserDashboardPage({ params }: Props) {
   const fullChildrenEvents = await Promise.all(
     childrenEvents.map(async ({ child, events }) => ({
       child,
-      events: await Promise.all(events.map(event => getEventInfo(event))),
+      events: await Promise.all(events.map(event => EventService.getEventInfo(event))),
     }))
   );
-
 
   // Fetch managed events
   const managedEvents = await eventRepository.findByAdminId(userId);
@@ -45,12 +44,12 @@ export default async function UserDashboardPage({ params }: Props) {
   // Fetch participating events (not admin)
   const participatingEvents = await eventRepository.findByUserParticipant(userId);
 
-  const fullManagedEvents: EventInfo[] = await Promise.all(
-    managedEvents.map((event) => getEventInfo(event))
+  const fullManagedEvents = await Promise.all(
+    managedEvents.map((event) => EventService.getEventInfo(event))
   );
 
-  const fullParticipatingEvents: EventInfo[] = await Promise.all(
-    participatingEvents.map((event) => getEventInfo(event))
+  const fullParticipatingEvents = await Promise.all(
+    participatingEvents.map((event) => EventService.getEventInfo(event))
   );
 
   return (

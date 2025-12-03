@@ -1,4 +1,3 @@
-
 import { NextResponse } from "next/server";
 import { InviteeType } from "@/type";
 import { eventParticipantRepository } from "@/repositories/EventParticipantRepository";

@@ -1,8 +1,9 @@
 'use client';
 import React, { useState, } from "react";
-import { getFamilyJoke } from "@/utils/family-jokes";
+import EasterEgg from "./EasterEgg";
 import { useSession } from "next-auth/react";
 import { apiGet } from "@/lib/api";
+import { EasterEggService } from "@/services/EasterEggService";
 
 interface DraftButtonProps {
   eventId: number;
@@ -88,21 +89,7 @@ const DraftButton: React.FC<DraftButtonPropsWithLimit> = ({ eventId, currentUser
               <>
                 <pre className="bg-blue-50 border border-blue-200 p-4 rounded text-base text-blue-900 font-mono overflow-x-auto max-h-80 text-center shadow-inner">{result}</pre>
                 {/* Custom joke/message for family users */}
-                {getFamilyJoke(drafterName, result, priceLimitCents) && (
-                  <div className="mt-4 text-center text-green-700 font-semibold text-base">
-                    {(() => {
-                      const joke = getFamilyJoke(drafterName, result, priceLimitCents);
-                      const url = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
-                      if (joke && drafterName === 'RATAK') {
-                        return <span><a href={url} target="_blank" rel="noopener noreferrer">{url}</a></span>;
-                      } else if (joke) {
-                        return <span>{joke}</span>;
-                      } else {
-                        return null;
-                      }
-                    })()}
-                  </div>
-                )}
+                <EasterEgg easterEgg={EasterEggService.getEasterEgg(drafterName, result, priceLimitCents)} drafterName={drafterName} />
               </>
             )}
           </div>

@@ -1,6 +1,5 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { query } from "@/lib/db";
 import bcrypt from "bcrypt";
 import type { SessionStrategy } from "next-auth";
 import type { JWT } from "next-auth/jwt";

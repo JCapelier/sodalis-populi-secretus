@@ -1,7 +1,7 @@
 'use client';
-import { validateSignUp } from "@/utils/form-validation-helper";
 import { useState } from "react";
 import { signIn } from "next-auth/react";
+import { SignUpService } from "@/services/SignUpService";
 
 interface SignUpFormProps {
   onSuccess?: (userId: number) => void;
@@ -19,7 +19,7 @@ export default function SignUpForm({ onSuccess }: SignUpFormProps) {
     setError('');
     setSuccess('');
 
-    const errorMessage = validateSignUp({username, password, confirmPassword})
+    const errorMessage = SignUpService.validateSignUp({username, password, confirmPassword})
     if (errorMessage) {
       setError(errorMessage);
       return;
