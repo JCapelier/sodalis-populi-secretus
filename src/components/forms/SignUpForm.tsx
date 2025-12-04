@@ -1,6 +1,5 @@
 'use client';
 import { useState } from "react";
-import { signIn } from "next-auth/react";
 import { SignUpService } from "@/services/SignUpService";
 
 interface SignUpFormProps {
@@ -16,44 +15,25 @@ export default function SignUpForm({ onSuccess }: SignUpFormProps) {
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setError('');
-    setSuccess('');
+    setError("");
+    setSuccess("");
 
-    const errorMessage = SignUpService.validateSignUp({username, password, confirmPassword})
+    const errorMessage = SignUpService.validateSignUp({ username, password, confirmPassword });
     if (errorMessage) {
       setError(errorMessage);
       return;
     }
 
-    const payload = {
-      username: username.trim(),
-      password,
-    };
-
-    const result = await fetch('/api/users/sign-up', {
-      method: 'POST',
-      headers: { 'Content-type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-
-    const formData = await result.json();
-    if (!result.ok) {
-      setError(formData.error || 'Failed to sign user up');
+    const result = await SignUpService.signUpAndSignIn(username, password);
+    if (result.error) {
+      setError(result.error);
     } else {
-      setSuccess('User signed up');
-      setUsername('');
-      setPassword('');
-      setConfirmPassword('');
-      // Automatically sign in the user after sign up
-      if (formData.user && formData.user.id) {
-        await signIn("credentials", {
-          username: payload.username,
-          password: payload.password,
-          redirect: false,
-        });
-        if (onSuccess) {
-          onSuccess(formData.user.id);
-        }
+      setSuccess("User signed up");
+      setUsername("");
+      setPassword("");
+      setConfirmPassword("");
+      if (onSuccess && result.userId) {
+        onSuccess(result.userId);
       }
     }
   }

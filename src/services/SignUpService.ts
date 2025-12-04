@@ -1,3 +1,7 @@
+import { apiPost } from "@/lib/api";
+import { User } from "@/type";
+import { signIn } from "next-auth/react";
+
 export class SignUpService {
   static validateSignUp({
     username,
@@ -26,5 +30,29 @@ export class SignUpService {
     if (password !== confirmPassword) return 'Password and confirmation do not match';
 
     return null;
+  }
+
+  static async signUpAndSignIn(username: string, password: string) {
+    const payload = { username: username.trim(), password };
+    try {
+      const newUser = await apiPost<User>('/api/users/sign-up', payload);
+      if (newUser && newUser.id) {
+        console.log("Before signIn");
+        const signInResult = await signIn("credentials", {
+          username: payload.username,
+          password: payload.password,
+          redirect: false,
+        });
+        console.log("After signIn", signInResult);
+        return { userId: newUser.id };
+      }
+      return { error: 'User created but could not sign in' };
+    } catch (error: unknown) {
+      let message = 'Failed to sign user up';
+      if (error instanceof Error) {
+        message = error.message;
+      }
+      return { error: message };
+    }
   }
 }
