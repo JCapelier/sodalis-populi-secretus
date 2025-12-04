@@ -85,3 +85,9 @@ export type EventPayload = {
   participants: Participant[];
   exclusions: Exclusion[]
 }
+
+export type ChildIdAndParentsUsernames = {
+  childId: number;
+  parentUsername: string;
+  otherParentUsername?: string;
+}
