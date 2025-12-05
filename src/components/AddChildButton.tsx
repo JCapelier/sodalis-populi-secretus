@@ -4,7 +4,6 @@ import InviteParticipantsField from "./forms/InviteParticipantsField";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChildService } from "@/services/ChildService";
-import ChangeUsernameModal from "./ChangeUsernameModal";
 
 type AddChildButtonProps = {userId: number | null}
 
