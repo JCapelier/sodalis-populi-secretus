@@ -41,6 +41,28 @@ export class ChildRepository {
     return result.rows[0] || null
   }
 
+  async getParentsUsernamesFromIds(ids: number[]): Promise<{childId: number, parentUsername: string, otherParentUsername: string}[]> {
+    if (ids.length === 0) return [];
+    const result = await query<{
+      childId: number,
+      parentUsername: string,
+      otherParentUsername: string
+    }>(
+      `
+      SELECT
+        c.id as childId,
+        u1.username as parentUsername,
+        u2.username as otherParentUsername
+      FROM children c
+      LEFT JOIN users u1 ON c.parent_id = u1.id
+      LEFT JOIN users u2 ON c.other_parent_id = u2.id
+      WHERE c.id = ANY($1)
+      `,
+      [ids]
+    );
+    return result.rows;
+  }
+
   async create(data: {
     username: string;
     parent_id: string;

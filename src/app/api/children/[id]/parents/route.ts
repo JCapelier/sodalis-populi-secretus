@@ -13,7 +13,7 @@ export async function GET(request: Request, context: {params: Promise<{id: strin
 
     const otherParent = other_parent_id ? await userRepository.findById(other_parent_id) : null;
 
-    return NextResponse.json({ parent, otherParent }, { status: 200 });
+    return NextResponse.json({ childId : id, parent, otherParent }, { status: 200 });
   } catch (error) {
     console.error("Could not fetch parents for child", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

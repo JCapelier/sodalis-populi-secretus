@@ -3,6 +3,7 @@ import { Participant } from "@/type";
 import InviteParticipantsField from "./forms/InviteParticipantsField";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import { ChildService } from "@/services/ChildService";
 
 type AddChildButtonProps = {userId: number | null}
 
@@ -23,27 +24,19 @@ const AddChildButton: React.FC<AddChildButtonProps> = ({ userId }) => {
       return;
     }
 
-    const payload = {
-      username: name.trim(),
-      parent_id: userId,
-      other_parent_id: otherParent ? otherParent.invitee_id : null,
-    };
-    const result = await fetch(`/api/users/${userId}/children`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-    const data = await result.json();
-    if (!result.ok) {
-      setError(data.error || 'Failed to add child');
-    } else {
-      setSuccess('Child added');
-      setName('');
-      setOtherParent(null);
+    try {
+      const newChild = await ChildService.submitChildCreation(name, userId!, otherParent?.invitee_id);
+        if (newChild) {
+          setSuccess('Child added');
+          setName('');
+          setOtherParent(null);
+          setOpen(false);
+          router.refresh();
+        }
+    } catch {
+      setError('Failed to add child');
     }
-    setOpen(false);
-    router.refresh();
-  };
+  }
 
   return (
     <>

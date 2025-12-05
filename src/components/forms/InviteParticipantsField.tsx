@@ -1,4 +1,5 @@
-import { Child, InviteeSearchResult, Participant } from "@/type";
+import { InviteeService } from "@/services/InviteeService";
+import { ChildIdAndParentsUsernames, InviteeSearchResult, Participant } from "@/type";
 import React, { useState, useRef } from "react";
 
 type InviteParticipantsFieldProps = {
@@ -11,9 +12,8 @@ type InviteParticipantsFieldProps = {
 const InviteParticipantsField: React.FC<InviteParticipantsFieldProps> = ({ onInvite, searchEndPoint, prefill }) => {
 	const [username, setUsername] = useState(prefill?.username || "");
 	const [error, setError] = useState<string | null>(null);
-	const [suggestions, setSuggestions] = useState<InviteeSearchResult[]>([]);
+	const [suggestions, setSuggestions] = useState<{ invitee: InviteeSearchResult, parentsInfo: ChildIdAndParentsUsernames | null }[]>([]);
 	const [showSuggestions, setShowSuggestions] = useState(false);
-	const [parentNames, setParentNames] = useState<Record<number, string>>({});
 	const inputRef = useRef<HTMLInputElement>(null);
 
 	// Always reflect prefill in the input value
@@ -28,50 +28,26 @@ const InviteParticipantsField: React.FC<InviteParticipantsFieldProps> = ({ onInv
 
 	// Fetch suggestions as user types
 	const handleInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-		const value = e.target.value;
-		setUsername(value);
+		const search = e.target.value;
+		setUsername(search);
 		setError(null);
-		if (value.trim().length === 0) {
+		if (search.trim().length === 0) {
 			setSuggestions([]);
 			setShowSuggestions(false);
-			setParentNames({});
 			return;
 		}
 		try {
-			const result = await fetch(`${searchEndPoint}?search=${encodeURIComponent(value)}`);
-			const data = await result.json();
-			const suggestions = data.suggestions;
-			if (result.ok && Array.isArray(suggestions)) {
-				setSuggestions(suggestions);
+			const newSuggestions = await InviteeService.getSuggestions(searchEndPoint, search);
+      if (newSuggestions) {
+				setSuggestions(newSuggestions);
 				setShowSuggestions(true);
-				// For each child, fetch parent names
-				const childInvitees = suggestions.filter((u: InviteeSearchResult) => u.type === 'child');
-				const parentNamePromises = childInvitees.map(async (child: Child) => {
-					try {
-						const res = await fetch(`/api/children/${child.id}/parents`);
-						const parentData = await res.json();
-						if (parentData.parent && parentData.otherParent) {
-							return [child.id, `${parentData.parent.username} & ${parentData.otherParent.username}`];
-						} else if (parentData.parent) {
-							return [child.id, parentData.parent.username];
-						} else {
-							return [child.id, "Unknown parent"];
-						}
-					} catch {
-						return [child.id, "Unknown parent"];
-					}
-				});
-				const parentNameEntries = await Promise.all(parentNamePromises);
-				setParentNames(Object.fromEntries(parentNameEntries));
 			} else {
 				setSuggestions([]);
 				setShowSuggestions(false);
-				setParentNames({});
 			}
 		} catch {
 			setSuggestions([]);
 			setShowSuggestions(false);
-			setParentNames({});
 		}
 	};
 
@@ -110,19 +86,13 @@ const InviteParticipantsField: React.FC<InviteParticipantsFieldProps> = ({ onInv
 			{showSuggestions && (
 				<ul className="absolute z-10 bg-white border rounded w-full mt-1 max-h-40 overflow-y-auto shadow">
 						{suggestions.length > 0 ? (
-							suggestions.map((invitee) => (
+							suggestions.map((suggestion) => (
 								<li
-									key={
-										invitee && invitee.id !== undefined && invitee.type
-											? `${invitee.type}-${invitee.id}`
-											: `${invitee.id}`
-									}
+									key={`${suggestion.invitee.type}-${suggestion.invitee.id}`}
 									className="px-3 py-2 cursor-pointer hover:bg-blue-100 text-black"
-									onMouseDown={() => handleSelect(invitee)}
+									onMouseDown={() => handleSelect(suggestion.invitee)}
 								>
-									{ !invitee.type || invitee.type === 'user'
-										? invitee.username
-										: `${invitee.username} (child of ${parentNames[invitee.id] || '...'})`}
+                  {InviteeService.suggestionText(suggestion)}
 								</li>
 							))
 						) : (

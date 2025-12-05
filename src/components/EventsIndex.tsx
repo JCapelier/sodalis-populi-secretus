@@ -1,6 +1,6 @@
 import React from "react";
 import EventsCategory from "./EventsCategory";
-import { EventInfo } from "@/type";
+import { EventInfo, ExclusionWithUsernames, Participant } from "@/type";
 
 export type Child = {
   id: number;
@@ -10,9 +10,9 @@ export type Child = {
 }
 
 interface EventsIndexProps {
-  managedEvents: EventInfo[];
-  participatingEvents: EventInfo[];
-  childrenEvents: {child: Child, events: EventInfo[]}[]
+  managedEvents: (EventInfo & { participants: Participant[]; exclusions: ExclusionWithUsernames[] })[];
+  participatingEvents: (EventInfo & { participants: Participant[]; exclusions: ExclusionWithUsernames[] })[];
+  childrenEvents: {child: Child, events: (EventInfo & { participants: Participant[]; exclusions: ExclusionWithUsernames[] })[]}[]
   currentUserId: number,
 }
 

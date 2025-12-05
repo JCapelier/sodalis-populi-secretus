@@ -47,14 +47,9 @@ const Dashboard: React.FC<DashboardProps> = ({ childrenList }) => {
 
     async function handlePasswordChange(oldPassword: string, newPassword: string) {
       if (!userId) throw new Error("No user ID");
-      const res = await fetch(`/api/users/${userId}/password`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ oldPassword, newPassword }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to change password");
+      const updatedPassword = await apiPut(`/api/users/${userId}/password`, { oldPassword, newPassword });
+      if (!updatedPassword) {
+        throw new Error("Failed to change password");
       }
     }
 

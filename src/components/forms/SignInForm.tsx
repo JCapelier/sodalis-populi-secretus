@@ -21,7 +21,6 @@ export default function SignInForm() {
     if (result?.error) {
       setError("Invalid username or password");
     } else {
-      // Wait for session to update, then redirect
       await update();
       const userId = session?.user?.id;
       if (userId) {

@@ -11,6 +11,7 @@ export class InviteeRepository {
     );
     return result.rows;
   }
+
 }
 
 export const inviteeRepository = new InviteeRepository();

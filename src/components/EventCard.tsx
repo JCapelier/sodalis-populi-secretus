@@ -3,7 +3,8 @@ import React, { useState } from "react";
 import EditEventButton from "./EditEventButton";
 import DraftButton from "./DraftButton";
 import DeleteEventButton from "./DeleteEventButton";
-import { Exclusion, Participant } from "@/type";
+import { ExclusionWithUsernames, InviteeType, Participant } from "@/type";
+import { ExclusionService } from "@/services/ExclusionService";
 
 interface EventCardProps {
   name: string;
@@ -14,7 +15,7 @@ interface EventCardProps {
   adminId: number;
   currentUserId: number;
   eventParticipants?: Participant[];
-  eventExclusions?: (Exclusion & { giverUsername?: string; receiverUsername?: string })[];
+  eventExclusions?: ExclusionWithUsernames[];
   childDraft: {option: boolean, childId?: number, childName?: string}
 }
 
@@ -45,38 +46,17 @@ export default function EventCard({ name, endsAt, priceLimitCents, adminName, ev
           {eventExclusions.length > 0 && (
             <div className="text-gray-700"><strong>Exclusions:</strong>
               <ul className="list-disc ml-6">
-                {(() => {
-                  // Build a map to detect reciprocal exclusions
-                  const exclusionMap = new Map();
-                  eventExclusions.forEach(ex => {
-                    const key = `${ex.giverUsername}--${ex.receiverUsername}`;
-                    exclusionMap.set(key, ex);
-                  });
-                  const displayed = new Set();
-                  return eventExclusions.filter(ex => {
-                    const key = `${ex.giverUsername}--${ex.receiverUsername}`;
-                    const reverseKey = `${ex.receiverUsername}--${ex.giverUsername}`;
-                    if (displayed.has(key) || displayed.has(reverseKey)) return false;
-                    displayed.add(key);
-                    // If reverse exists, treat as reciprocal
-                    return true;
-                  }).map((ex) => {
-                    const key = `${ex.giverUsername}--${ex.receiverUsername}`;
-                    const reverseKey = `${ex.receiverUsername}--${ex.giverUsername}`;
-                    const isReciprocal = exclusionMap.has(reverseKey);
-                    return (
-                      <li key={key}>
-                        {ex.giverUsername}
-                        {isReciprocal ? (
-                          <span title="Reciprocal exclusion" className="mx-1">&#8646;</span>
-                        ) : (
-                          <span title="One-way exclusion" className="mx-1">&#8594;</span>
-                        )}
-                        {ex.receiverUsername}
-                      </li>
-                    );
-                  });
-                })()}
+                {ExclusionService.formatExclusion(eventExclusions).map(({ giverUsername, receiverUsername, reciprocal }) => (
+                  <li key={`${giverUsername}--${receiverUsername}`}>
+                    {giverUsername}
+                    {reciprocal ? (
+                      <span title="Reciprocal exclusion" className="mx-1">&#8646;</span>
+                    ) : (
+                      <span title="One-way exclusion" className="mx-1">&#8594;</span>
+                    )}
+                    {receiverUsername}
+                  </li>
+                ))}
               </ul>
             </div>
           )}
@@ -86,8 +66,8 @@ export default function EventCard({ name, endsAt, priceLimitCents, adminName, ev
                 <EditEventButton eventId={eventId} />
               </>
             )}
-            {(eventParticipants.some(p => p.invitee_id === currentUserId && p.type === 'user')
-              || (childDraft.option && childDraft.childId && eventParticipants.some(p => p.invitee_id === childDraft.childId && p.type === 'child'))
+            {(eventParticipants.some(participant => participant.invitee_id === currentUserId && participant.type === InviteeType.User)
+              || (childDraft.option && childDraft.childId && eventParticipants.some(participant => participant.invitee_id === childDraft.childId && participant.type === InviteeType.Child))
             ) && (
               <DraftButton eventId={eventId} currentUserId={currentUserId} childDraft={childDraft} priceLimitCents={priceLimitCents} />
             )}

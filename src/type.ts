@@ -38,19 +38,12 @@ export type EventParticipant = {
   status: Status;
 }
 
-export type EventParticipantFull = {
-  id: number;
-  event: Event;
-  user: User;
-  status: Status;
-}
-
 export type Exclusion = { id?: number, invitee_id: number; invitee_type: InviteeType, excluded_invitee_id: number; excluded_invitee_type: InviteeType, event_id?: number };
 export type Participant = { invitee_id: number; type: InviteeType, username: string };
 export type Pairing = { giver_id: number; giver_type: InviteeType, receiver_id: number; receiver_type: InviteeType,}
 
 export interface EventInfo extends Event {
-  adminUsername: string;
+  adminUsername?: string;
   participants: Participant[];
   exclusions: Exclusion[];
 }
@@ -62,9 +55,16 @@ export type Child = {
   username: string;
 }
 
+export type ExclusionWithUsernames = Exclusion & {
+  giverUsername: string;
+  receiverUsername: string
+}
+
 export type ExclusionWithReciprocal = Exclusion & {
   reciprocal?: boolean;
 };
+
+export type ExclusionWithUsernamesAndReciprocal = ExclusionWithReciprocal & ExclusionWithUsernames
 
 export type InviteeSearchResult = {
   id: number;
@@ -75,4 +75,19 @@ export type InviteeSearchResult = {
 export type InviteeKey = {
   id: number;
   type: InviteeType
+}
+
+export type EventPayload = {
+  name: string;
+  admin_id: number;
+  ends_at: string | null;
+  price_limit_cents: number | null;
+  participants: Participant[];
+  exclusions: Exclusion[]
+}
+
+export type ChildIdAndParentsUsernames = {
+  childId: number;
+  parentUsername: string;
+  otherParentUsername?: string;
 }

@@ -69,6 +69,10 @@ export class PairingRepository {
   async delete(id: number): Promise<void> {
     await query(`DELETE FROM pairings WHERE id = $1`, [id]);
   }
+
+  async deleteByEventId(eventId: number): Promise<void> {
+    await query(`DELETE FROM pairings WHERE event_id = $1`, [eventId]);
+  }
 }
 
 export const pairingRepository = new PairingRepository();

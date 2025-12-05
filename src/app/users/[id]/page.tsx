@@ -1,12 +1,14 @@
 import React from "react";
 import Dashboard from "@/components/Dashboard";
 import EventsIndex from "@/components/EventsIndex";
-import { getEventInfo, query } from "@/lib/db";
-import { Child, EventInfo, Event as EventType } from "@/type";
+import { Child, Event as EventType } from "@/type";
 import CreateEventButton from "@/components/CreateEventButton";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { redirect } from "next/navigation";
+import { childRepository } from "@/repositories/ChildRepository";
+import { eventRepository } from "@/repositories/EventRepository";
+import { EventService } from "@/services/EventService";
 
 interface Props {
   params: { id: string };
@@ -20,59 +22,34 @@ export default async function UserDashboardPage({ params }: Props) {
     redirect("/");
   }
 
+  const children = await childRepository.findByParentId(userId);
 
-  const childrenResult = await query(
-    `SELECT * FROM children WHERE parent_id = $1 OR other_parent_id = $1`,
-    [userId]
-  );
-  const children = childrenResult.rows as Child[];
-
-  // For each child, fetch events where the child is a participant
   const childrenEvents: { child: Child; events: EventType[] }[] = await Promise.all(
-    children.map(async (child: Child) => {
-      const childEventsResult = await query(
-        `SELECT e.* FROM events e
-         JOIN event_participants ep ON ep.event_id = e.id
-         WHERE ep.invitee_id = $1 AND ep.type = 'child'`,
-        [child.id]
-      );
-      return {
-        child,
-        events: childEventsResult.rows as EventType[],
-      };
-    })
+    children.map(async (child: Child) => ({
+      child,
+      events: await eventRepository.findByChildParticipant(child.id),
+    }))
   );
 
   const fullChildrenEvents = await Promise.all(
     childrenEvents.map(async ({ child, events }) => ({
       child,
-      events: await Promise.all(events.map(event => getEventInfo(event))),
+      events: await Promise.all(events.map(event => EventService.getEventInfo(event))),
     }))
   );
 
-
   // Fetch managed events
-  const managedEventsResult = await query(
-    "SELECT * FROM events WHERE admin_id = $1",
-    [userId]
-  );
-  const managedEvents = managedEventsResult.rows as EventType[];
+  const managedEvents = await eventRepository.findByAdminId(userId);
 
   // Fetch participating events (not admin)
-  const participatingEventsResult = await query(
-    `SELECT e.* FROM events e
-     JOIN event_participants ep ON ep.event_id = e.id
-     WHERE ep.invitee_id = $1 AND e.admin_id != $1`,
-    [userId]
-  );
-  const participatingEvents = participatingEventsResult.rows as EventType[];
+  const participatingEvents = await eventRepository.findByUserParticipant(userId);
 
-  const fullManagedEvents: EventInfo[] = await Promise.all(
-    managedEvents.map((event) => getEventInfo(event))
+  const fullManagedEvents = await Promise.all(
+    managedEvents.map((event) => EventService.getEventInfo(event))
   );
 
-  const fullParticipatingEvents: EventInfo[] = await Promise.all(
-    participatingEvents.map((event) => getEventInfo(event))
+  const fullParticipatingEvents = await Promise.all(
+    participatingEvents.map((event) => EventService.getEventInfo(event))
   );
 
   return (

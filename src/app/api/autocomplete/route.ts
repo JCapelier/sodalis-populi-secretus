@@ -12,7 +12,7 @@ export async function GET(request: Readonly<Request>) {
       return NextResponse.json({ error: 'No user corresponding to this username' }, { status: 404 });
     }
 
-    return NextResponse.json({ suggestions: suggestions}, {status: 200});
+    return NextResponse.json(suggestions, {status: 200});
   } catch (error) {
     console.error('Could not find any user', error);
     return NextResponse.json({error: 'Internal server error'}, {status: 500})

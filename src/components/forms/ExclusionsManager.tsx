@@ -1,3 +1,4 @@
+import { ExclusionService } from "@/services/ExclusionService";
 import { ExclusionWithReciprocal, InviteeType, Participant } from "@/type";
 import React, { useState } from "react";
 
@@ -10,95 +11,44 @@ interface ExclusionsManagerProps {
 
 const ExclusionsManager: React.FC<ExclusionsManagerProps> = ({ participants, exclusions, setExclusions }) => {
   const [newExclusion, setNewExclusion] = useState<ExclusionWithReciprocal>({ invitee_id: 0, invitee_type: InviteeType.User, excluded_invitee_id: 0, excluded_invitee_type: InviteeType.User, reciprocal: true });
+
   const handleAdd = () => {
-    if (
-      newExclusion.invitee_id &&
-      newExclusion.excluded_invitee_id &&
-      // Check both id and type for self-exclusion
-      !(newExclusion.invitee_id === newExclusion.excluded_invitee_id && newExclusion.invitee_type === newExclusion.excluded_invitee_type) &&
-      // Check both id and type for uniqueness
-      !exclusions.some(e =>
-        e.invitee_id === newExclusion.invitee_id &&
-        e.invitee_type === newExclusion.invitee_type &&
-        e.excluded_invitee_id === newExclusion.excluded_invitee_id &&
-        e.excluded_invitee_type === newExclusion.excluded_invitee_type
-      )
-    ) {
-      // Find types from participants
-      const invitee = participants.find(p => p.invitee_id === newExclusion.invitee_id && p.type === newExclusion.invitee_type);
-      const excluded = participants.find(p => p.invitee_id === newExclusion.excluded_invitee_id && p.type === newExclusion.excluded_invitee_type);
-      const exclusionToAdd = {
-        ...newExclusion,
-        invitee_type: invitee?.type || InviteeType.User,
-        excluded_invitee_type: excluded?.type || InviteeType.User,
-        reciprocal: !!newExclusion.reciprocal
-      };
-      const newList = [...exclusions, exclusionToAdd];
-      if (newExclusion.reciprocal) {
-        // Add the reverse exclusion if not already present
-        if (!exclusions.some(e => e.invitee_id === newExclusion.excluded_invitee_id && e.invitee_type === (excluded?.type || InviteeType.User) && e.excluded_invitee_id === newExclusion.invitee_id && e.excluded_invitee_type === (invitee?.type || InviteeType.User))) {
-          newList.push({
-            invitee_id: newExclusion.excluded_invitee_id,
-            invitee_type: excluded?.type || InviteeType.User,
-            excluded_invitee_id: newExclusion.invitee_id,
-            excluded_invitee_type: invitee?.type || InviteeType.User,
-            reciprocal: true
-          });
-        }
-      }
-      setExclusions(newList);
-      setNewExclusion({ invitee_id: 0, invitee_type: InviteeType.User, excluded_invitee_id: 0, excluded_invitee_type: InviteeType.User, reciprocal: true });
-    }
-  };
+    const newList = newExclusion.reciprocal
+      ? ExclusionService.addReciprocalExclusionToList(exclusions, newExclusion)
+      : ExclusionService.addNonReciprocalExclusionToList(exclusions, newExclusion)
+    setExclusions(newList);
+    setNewExclusion({ invitee_id: 0, invitee_type: InviteeType.User, excluded_invitee_id: 0, excluded_invitee_type: InviteeType.User, reciprocal: true });
+  }
 
   const handleRemove = (index: number) => {
-    const ex = exclusions[index];
-    let newList = exclusions.filter((_, i) => i !== index);
-    // If reciprocal, remove the reverse as well
-    if (ex.reciprocal) {
-      newList = newList.filter(e =>
-        !((e.invitee_id === ex.excluded_invitee_id && e.invitee_type === ex.excluded_invitee_type) &&
-         (e.excluded_invitee_id === ex.invitee_id && e.excluded_invitee_type === ex.invitee_type)));
-    }
+    const removedExclusion = exclusions[index];
+    const newList = removedExclusion.reciprocal
+      ? ExclusionService.removeReciprocalExclusionFromList(exclusions, removedExclusion)
+      : ExclusionService.removeNonReciprocalExclusionFromList(exclusions, removedExclusion)
     setExclusions(newList);
   };
 
-  // Deduplicate reciprocal exclusions for display
-  const displayed: Set<string> = new Set();
-  const displayExclusions = exclusions.filter(ex => {
-    if (ex.reciprocal) {
-      // Only display one direction for reciprocal exclusions
-      const key = [ex.invitee_type, ex.invitee_id, ex.excluded_invitee_type, ex.excluded_invitee_id].join('-');
-      const reverseKey = [ex.excluded_invitee_type, ex.excluded_invitee_id, ex.invitee_type, ex.invitee_id].join('-');
-      if (displayed.has(reverseKey)) return false;
-      displayed.add(key);
-      return true;
-    } else {
-      // Always display non-reciprocal exclusions
-      return true;
-    }
-  });
+  const displayExclusionsWithReciprocals = ExclusionService.inferReciprocalExclusions(exclusions);
+  const displayExclusionsWithReciprocalsAndUsernames = ExclusionService.getUsernamesForExclusionsFromParticipants(displayExclusionsWithReciprocals, participants);
 
   return (
     <div className="mt-4">
-      {displayExclusions.map((ex, idx) => {
-        const from = participants.find(p => p.invitee_id === ex.invitee_id && p.type === ex.invitee_type)?.username || "?";
-        const to = participants.find(p => p.invitee_id === ex.excluded_invitee_id && p.type === ex.excluded_invitee_type)?.username || "?";
+      {displayExclusionsWithReciprocalsAndUsernames.map((exclusion, index) => {
         return (
-          <div key={`${ex.invitee_type}-${ex.invitee_id}_x_${ex.excluded_invitee_type}-${ex.excluded_invitee_id}_${idx}`} className="flex items-center gap-2 mb-1">
+          <div key={`${index}`} className="flex items-center gap-2 mb-1">
             <span className="text-black flex items-center gap-1">
-              {from}
-              {ex.reciprocal ? (
+              {exclusion.giverUsername}
+              {exclusion.reciprocal ? (
                 <span title="Reciprocal exclusion" className="mx-1">&#8646;</span> // double arrow
               ) : (
                 <span title="One-way exclusion" className="mx-1">&#8594;</span> // single arrow
               )}
-              {to}
+              {exclusion.receiverUsername}
             </span>
             <button
               type="button"
               className="text-red-500 hover:text-red-700 ml-2"
-              onClick={() => handleRemove(idx)}
+              onClick={() => handleRemove(index)}
               aria-label="Remove exclusion"
             >
               &#10005;

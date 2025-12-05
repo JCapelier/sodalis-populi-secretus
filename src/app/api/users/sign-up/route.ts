@@ -19,7 +19,7 @@ export async function POST(request: Readonly<Request>) {
 
     const newUser = await userRepository.create({username: username, password_hash: hashedPassword});
 
-    return NextResponse.json({ user: newUser }, { status: 201 });
+    return NextResponse.json( newUser , { status: 201 });
   } catch (error) {
     console.error('User sign up error', error);
     return NextResponse.json({error: 'Internal server error'}, {status: 500})
