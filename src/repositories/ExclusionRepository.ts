@@ -40,6 +40,36 @@ export class ExclusionRepository {
     return result.rows[0];
   }
 
+  async createAllExclusionsForEvent(
+  event_id: number,
+  exclusions: Exclusion[]
+): Promise<Exclusion[]> {
+  if (exclusions.length === 0) return [];
+
+  const eventIds = exclusions.map(() => event_id);
+  const inviteeIds = exclusions.map((e) => e.invitee_id);
+  const inviteeTypes = exclusions.map((e) => e.invitee_type);
+  const excludedInviteeIds = exclusions.map((e) => e.excluded_invitee_id);
+  const excludedInviteeTypes = exclusions.map((e) => e.excluded_invitee_type);
+
+  const sql = `
+    INSERT INTO exclusions (event_id, invitee_id, invitee_type, excluded_invitee_id, excluded_invitee_type)
+    SELECT *
+    FROM unnest($1::int[], $2::int[], $3::text[], $4::int[], $5::text[])
+    RETURNING *
+  `;
+
+  const result = await query<Exclusion>(sql, [
+    eventIds,
+    inviteeIds,
+    inviteeTypes,
+    excludedInviteeIds,
+    excludedInviteeTypes,
+  ]);
+
+  return result.rows;
+}
+
   async update(id: number, data: {
     event_id: number;
     invitee_id: number;

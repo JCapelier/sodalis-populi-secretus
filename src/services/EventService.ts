@@ -1,6 +1,12 @@
 import { apiGet } from "@/lib/api";
 import { exclusionRepository } from "@/repositories/ExclusionRepository";
-import { Event, EventInfo, ExclusionWithUsernames, InviteeType, Participant } from "@/type";
+import { Event, EventInfo, EventPayload, ExclusionWithReciprocal, ExclusionWithUsernames, InviteeType, Participant, Status } from "@/type";
+import { ExclusionService } from "./ExclusionService";
+import { AssignmentService } from "./AssignmentService";
+import { NextResponse } from "next/server";
+import { eventRepository } from "@/repositories/EventRepository";
+import { eventParticipantRepository } from "@/repositories/EventParticipantRepository";
+import { DraftService } from "./DraftService";
 
 export class EventService {
 
@@ -50,5 +56,59 @@ export class EventService {
       participants: participants,
       exclusions: exclusionsWithUsernames,
     };
+  }
+
+  static async prepareEventExclusions(body: EventPayload) {
+    const exclusions: ExclusionWithReciprocal[] = [];
+    for (const exclusion of body.exclusions) {
+      exclusions.push({ ...exclusion });
+      if (exclusion.reciprocal) {
+        const reciprocalExclusion = ExclusionService.buildReciprocalExclusion(exclusion);
+        if (!body.exclusions.some((exclusion) => ExclusionService.isSameExclusion(exclusion, reciprocalExclusion))) exclusions.push({ ...reciprocalExclusion });
+      }
+    }
+  }
+
+  static async fullEventCreationWorkflow(body: EventPayload) {
+    const inviteeKeys = body.participants.map((participant) => ({ id: participant.invitee_id, type: participant.type }));
+    if (!AssignmentService.hasValidAssignment(inviteeKeys, body.exclusions)) {
+      return { error: "No valid assignment possible with these exclusions." };
+    }
+
+    const createdEvent = await eventRepository.create(body);
+    if (!createdEvent) return { error: 'Event creation failed'};
+
+    const exclusions = ExclusionService.prepareEventExclusions(body.exclusions);
+
+    const createdParticipants = await eventParticipantRepository.createAllParticipantsForEvent(createdEvent.id, body.participants);
+    if (!createdParticipants) return { error: 'Participants creation failed'};
+
+    const createdExclusions = await exclusionRepository.createAllExclusionsForEvent(createdEvent.id, exclusions);
+    if (!createdExclusions) return { error: 'Exlusions creation failed'};
+
+    const isValid = await DraftService.runDraft(createdEvent.id, inviteeKeys, exclusions);
+    if (!isValid) return { error: 'Pairings creation failed'}
+
+    return {event: createdEvent, participants: createdParticipants, exclusions: createdExclusions, isValid: isValid}
+  }
+
+
+  static async createParticipantsAndExclusionsForEvent(event: Event, body: EventPayload) {
+    for (const participant of body.participants) {
+      await eventParticipantRepository.create({ ...participant, event_id: event.id, status: Status.Invited });
+    }
+
+    for (const exclusion of body.exclusions) {
+      await exclusionRepository.create({ ...exclusion, event_id: event.id });
+    }
+  }
+
+  static async draftForEvent(event: Event, body: EventPayload) {
+    const inviteeKeys = body.participants.map((participant) => ({ id: participant.invitee_id, type: participant.type }));
+    const draftResult = await DraftService.runDraft(event.id, inviteeKeys, body.exclusions);
+    if (!draftResult.success) {
+      return NextResponse.json({ error: draftResult.error || "Draft failed" }, { status: 400 });
+    }
+
   }
 }

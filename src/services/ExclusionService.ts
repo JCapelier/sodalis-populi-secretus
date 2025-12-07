@@ -161,4 +161,20 @@ export class ExclusionService {
 
     return exclusions.filter((exclusion) => !this.isSameExclusion(exclusion, removedExclusion) && !this.isSameExclusion(exclusion, reciprocalExclusion));
   }
+
+  static prepareEventExclusions(exclusions: ExclusionWithReciprocal[]): Exclusion[] {
+    const explicitExclusions: Exclusion[] = [];
+    for (const exclusion of exclusions) {
+      explicitExclusions.push({ ...exclusion });
+      if (exclusion.reciprocal) {
+        const reciprocalExclusion = ExclusionService.buildReciprocalExclusion(exclusion);
+        if (!explicitExclusions.some((ex) => ExclusionService.isSameExclusion(ex, reciprocalExclusion))) {
+          explicitExclusions.push({ ...reciprocalExclusion });
+        }
+      }
+    }
+    return explicitExclusions;
+  }
+
+
 }

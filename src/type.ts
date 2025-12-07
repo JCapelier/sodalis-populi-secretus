@@ -80,10 +80,10 @@ export type InviteeKey = {
 export type EventPayload = {
   name: string;
   admin_id: number;
-  ends_at: string | null;
+  ends_at: string;
   price_limit_cents: number | null;
   participants: Participant[];
-  exclusions: Exclusion[]
+  exclusions: ExclusionWithReciprocal[]
 }
 
 export type ChildIdAndParentsUsernames = {

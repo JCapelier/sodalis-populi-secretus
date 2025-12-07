@@ -1,5 +1,5 @@
 'use client';
-import { Exclusion, Participant } from "@/type";
+import { EventPayload, Exclusion, Participant } from "@/type";
 import { useState, useEffect } from "react";
 import ExclusionsManager from "./ExclusionsManager";
 import InviteParticipantsField from "./InviteParticipantsField";
@@ -57,10 +57,10 @@ export default function EventForm({ idString, onSuccess }: EventFormProps) {
       return;
     }
 
-    const payload = {
+    const payload: EventPayload = {
       name: name.trim(),
       admin_id: Number(session?.user?.id),
-      ends_at: endsAt || null,
+      ends_at: endsAt,
       price_limit_cents: priceLimit ? Math.round(Number(priceLimit) * 100) : null,
       participants: invited,
       exclusions,
