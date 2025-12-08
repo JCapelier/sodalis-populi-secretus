@@ -1,4 +1,4 @@
-import { EasterEggResult, EasterEggType } from "@/services/EasterEggService";
+import { EasterEggResult, EasterEggType } from "@/utils/easter-egg-utils";
 import React from "react";
 
 interface EasterEggProps {

@@ -8,6 +8,7 @@ export async function GET(request: Request) {
     const ids = idsParam ? idsParam.split(",").map(Number) : [];
 
     const childrenWithParentUsernames = await childRepository.getParentsUsernamesFromIds(ids);
+    console.log(childrenWithParentUsernames)
     return NextResponse.json(childrenWithParentUsernames, { status: 200 });
   } catch (error) {
     console.error("Could not fetch parent usernames", error);

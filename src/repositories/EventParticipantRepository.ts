@@ -34,6 +34,35 @@ export class EventParticipantRepository {
     return result.rows[0];
   }
 
+  async createAllParticipantsForEvent(
+    event_id: number,
+    participants: Participant[]
+  ): Promise<Participant[]> {
+    if (participants.length === 0) return [];
+
+    const eventIds   = participants.map(() => event_id);
+    const inviteeIds = participants.map((p) => p.invitee_id);
+    const types      = participants.map((p) => p.type);
+    const statuses   = participants.map(() => Status.Invited);
+
+    const sql = `
+      INSERT INTO event_participants (event_id, invitee_id, type, status)
+      SELECT *
+      FROM unnest($1::int[], $2::int[], $3::text[], $4::text[])
+      RETURNING *
+    `;
+
+    const result = await query<Participant>(sql, [
+      eventIds,
+      inviteeIds,
+      types,
+      statuses,
+    ]);
+
+    return result.rows;
+  }
+
+
   async update(id: number, data: {
     event_id: number;
     invitee_id: number;

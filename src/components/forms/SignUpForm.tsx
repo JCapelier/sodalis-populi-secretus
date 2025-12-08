@@ -1,6 +1,7 @@
 'use client';
 import { useState } from "react";
 import { SignUpService } from "@/services/SignUpService";
+import { validateSignUp } from "@/utils/validate-sign-up";
 
 interface SignUpFormProps {
   onSuccess?: (userId: number) => void;
@@ -18,7 +19,7 @@ export default function SignUpForm({ onSuccess }: SignUpFormProps) {
     setError("");
     setSuccess("");
 
-    const errorMessage = SignUpService.validateSignUp({ username, password, confirmPassword });
+    const errorMessage = validateSignUp({ username, password, confirmPassword });
     if (errorMessage) {
       setError(errorMessage);
       return;

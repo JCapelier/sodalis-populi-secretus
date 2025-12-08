@@ -14,7 +14,7 @@ export async function GET(request: Request) {
 
   try {
     const participants = await eventParticipantRepository.findByEventId(eventId);
-    // Separate user and child IDs
+
     const userIds = participants.filter(participant => participant.type === InviteeType.User).map(participant => participant.invitee_id);
     const childrenIds = participants.filter(participant => participant.type === InviteeType.Child).map(participant => participant.invitee_id);
 

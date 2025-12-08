@@ -3,7 +3,7 @@ import React, { useState, } from "react";
 import EasterEgg from "./EasterEgg";
 import { useSession } from "next-auth/react";
 import { apiGet } from "@/lib/api";
-import { EasterEggService } from "@/services/EasterEggService";
+import { getEasterEgg } from "@/utils/easter-egg-utils";
 
 interface DraftButtonProps {
   eventId: number;
@@ -89,7 +89,7 @@ const DraftButton: React.FC<DraftButtonPropsWithLimit> = ({ eventId, currentUser
               <>
                 <pre className="bg-blue-50 border border-blue-200 p-4 rounded text-base text-blue-900 font-mono overflow-x-auto max-h-80 text-center shadow-inner">{result}</pre>
                 {/* Custom joke/message for family users */}
-                <EasterEgg easterEgg={EasterEggService.getEasterEgg(drafterName, result, priceLimitCents)} drafterName={drafterName} />
+                <EasterEgg easterEgg={getEasterEgg(drafterName, result, priceLimitCents)} drafterName={drafterName} />
               </>
             )}
           </div>

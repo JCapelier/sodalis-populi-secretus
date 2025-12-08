@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Exclusion, ExclusionWithReciprocal } from "@/type";
 import { exclusionRepository } from "@/repositories/ExclusionRepository";
-import { ExclusionService } from "@/services/ExclusionService";
+import { buildReciprocalExclusion, isSameExclusion } from "@/utils/exclusion-utils";
 
 export async function GET(request: NextRequest) {
   const eventId = Number(request.nextUrl.searchParams.get("event-id"));
@@ -26,8 +26,8 @@ export async function PUT(request: NextRequest) {
   for (const exclusion of exclusions) {
     fullExclusions.push(exclusion)
     if (exclusion.reciprocal) {
-      const reciprocalExclusion = ExclusionService.buildReciprocalExclusion(exclusion);
-      if (!fullExclusions.some((fullExclusion) => ExclusionService.isSameExclusion(fullExclusion, reciprocalExclusion))) fullExclusions.push(reciprocalExclusion);
+      const reciprocalExclusion = buildReciprocalExclusion(exclusion);
+      if (!fullExclusions.some((fullExclusion) => isSameExclusion(fullExclusion, reciprocalExclusion))) fullExclusions.push(reciprocalExclusion);
     }
   }
 
