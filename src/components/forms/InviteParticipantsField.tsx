@@ -1,5 +1,6 @@
 import { InviteeService } from "@/services/InviteeService";
 import { ChildIdAndParentsUsernames, InviteeSearchResult, Participant } from "@/type";
+import { suggestionText } from "@/utils/invitee-utils";
 import React, { useState, useRef } from "react";
 
 type InviteParticipantsFieldProps = {
@@ -92,7 +93,7 @@ const InviteParticipantsField: React.FC<InviteParticipantsFieldProps> = ({ onInv
 									className="px-3 py-2 cursor-pointer hover:bg-blue-100 text-black"
 									onMouseDown={() => handleSelect(suggestion.invitee)}
 								>
-                  {InviteeService.suggestionText(suggestion)}
+                  {suggestionText(suggestion)}
 								</li>
 							))
 						) : (

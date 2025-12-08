@@ -4,7 +4,7 @@ import EditEventButton from "./EditEventButton";
 import DraftButton from "./DraftButton";
 import DeleteEventButton from "./DeleteEventButton";
 import { ExclusionWithUsernames, InviteeType, Participant } from "@/type";
-import { ExclusionService } from "@/services/ExclusionService";
+import { formatExclusion } from "@/utils/exclusion-utils";
 
 interface EventCardProps {
   name: string;
@@ -46,7 +46,7 @@ export default function EventCard({ name, endsAt, priceLimitCents, adminName, ev
           {eventExclusions.length > 0 && (
             <div className="text-gray-700"><strong>Exclusions:</strong>
               <ul className="list-disc ml-6">
-                {ExclusionService.formatExclusion(eventExclusions).map(({ giverUsername, receiverUsername, reciprocal }) => (
+                {formatExclusion(eventExclusions).map(({ giverUsername, receiverUsername, reciprocal }) => (
                   <li key={`${giverUsername}--${receiverUsername}`}>
                     {giverUsername}
                     {reciprocal ? (

@@ -5,9 +5,9 @@ import ExclusionsManager from "./ExclusionsManager";
 import InviteParticipantsField from "./InviteParticipantsField";
 import { useSession } from "next-auth/react";
 import { EventFormService } from "@/services/EventFormService";
-import { InviteeService } from "@/services/InviteeService";
-import { ExclusionService } from "@/services/ExclusionService";
 import { toDateInputValue } from "@/utils/date-format";
+import { removeInviteeFromInvited } from "@/utils/invitee-utils";
+import { removeExclusionsWhenRemovingInvitee } from "@/utils/exclusion-utils";
 
 
 interface EventFormProps {
@@ -147,8 +147,8 @@ export default function EventForm({ idString, onSuccess }: EventFormProps) {
                   aria-label={`Remove ${invitee.username}`}
                   className="text-red-600 hover:text-red-800 ml-2 font-bold"
                   onClick={() => {
-                    setInvited(InviteeService.removeInviteeFromInvited(invitee, invited));
-                    setExclusions(ExclusionService.removeExclusionsWhenRemovingInvitee(exclusions, invitee));
+                    setInvited(removeInviteeFromInvited(invitee, invited));
+                    setExclusions(removeExclusionsWhenRemovingInvitee(exclusions, invitee));
                   }}
                 >
                   &#10005;

@@ -10,8 +10,8 @@ export type EasterEggResult =
   | { type: EasterEggType.Button; label: string; onClick: () => void }
 
 
-export class EasterEggService {
-  static getEasterEgg(username: string | undefined, drafted: string | null, priceLimitCents?: number | null): EasterEggResult | null {
+
+export function getEasterEgg(username: string | undefined, drafted: string | null, priceLimitCents?: number | null): EasterEggResult | null {
     if (!username) return null;
     if (username === 'Esther' && drafted) {
       return {type: EasterEggType.Text, value: `Hyper bizarre, de tirer ${drafted}, pas vrai ?`};
@@ -53,5 +53,3 @@ export class EasterEggService {
     }
     return null;
   }
-
-}

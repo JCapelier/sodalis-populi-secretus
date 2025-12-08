@@ -1,5 +1,5 @@
-import { ExclusionService } from "@/services/ExclusionService";
 import { ExclusionWithReciprocal, InviteeType, Participant } from "@/type";
+import { addNonReciprocalExclusionToList, addReciprocalExclusionToList, getUsernamesForExclusionsFromParticipants, inferReciprocalExclusions, removeNonReciprocalExclusionFromList, removeReciprocalExclusionFromList } from "@/utils/exclusion-utils";
 import React, { useState } from "react";
 
 
@@ -14,8 +14,8 @@ const ExclusionsManager: React.FC<ExclusionsManagerProps> = ({ participants, exc
 
   const handleAdd = () => {
     const newList = newExclusion.reciprocal
-      ? ExclusionService.addReciprocalExclusionToList(exclusions, newExclusion)
-      : ExclusionService.addNonReciprocalExclusionToList(exclusions, newExclusion)
+      ? addReciprocalExclusionToList(exclusions, newExclusion)
+      : addNonReciprocalExclusionToList(exclusions, newExclusion)
     setExclusions(newList);
     setNewExclusion({ invitee_id: 0, invitee_type: InviteeType.User, excluded_invitee_id: 0, excluded_invitee_type: InviteeType.User, reciprocal: true });
   }
@@ -23,13 +23,13 @@ const ExclusionsManager: React.FC<ExclusionsManagerProps> = ({ participants, exc
   const handleRemove = (index: number) => {
     const removedExclusion = exclusions[index];
     const newList = removedExclusion.reciprocal
-      ? ExclusionService.removeReciprocalExclusionFromList(exclusions, removedExclusion)
-      : ExclusionService.removeNonReciprocalExclusionFromList(exclusions, removedExclusion)
+      ? removeReciprocalExclusionFromList(exclusions, removedExclusion)
+      : removeNonReciprocalExclusionFromList(exclusions, removedExclusion)
     setExclusions(newList);
   };
 
-  const displayExclusionsWithReciprocals = ExclusionService.inferReciprocalExclusions(exclusions);
-  const displayExclusionsWithReciprocalsAndUsernames = ExclusionService.getUsernamesForExclusionsFromParticipants(displayExclusionsWithReciprocals, participants);
+  const displayExclusionsWithReciprocals = inferReciprocalExclusions(exclusions);
+  const displayExclusionsWithReciprocalsAndUsernames = getUsernamesForExclusionsFromParticipants(displayExclusionsWithReciprocals, participants);
 
   return (
     <div className="mt-4">

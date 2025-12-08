@@ -1,6 +1,6 @@
 import { apiGet, apiPost, apiPut } from "@/lib/api";
 import { Event, EventInfo, EventPayload, Exclusion, Participant } from "@/type";
-import { ExclusionService } from "./ExclusionService";
+import { inferReciprocalExclusions } from "@/utils/exclusion-utils";
 
 export class EventFormService {
   static async fetchEvent(eventId: number): Promise<Event> {
@@ -23,7 +23,7 @@ export class EventFormService {
     ]);
 
     const adminUsername: string = await apiGet(`/api/users/username-by-user-id?user-id=${event.admin_id}`)
-    const fullExclusions = ExclusionService.inferReciprocalExclusions(rawExclusions)
+    const fullExclusions = inferReciprocalExclusions(rawExclusions)
 
     return {
       ...event,
