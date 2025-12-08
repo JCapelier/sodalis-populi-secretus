@@ -40,7 +40,7 @@ export function areReciprocalExclusion(a: Exclusion | ExclusionWithReciprocal, b
   );
 }
 
-// Takes an array of exclusions, and check if some of these are reciprocal
+
 export function inferReciprocalExclusions(rawExclusions: Exclusion[]): ExclusionWithReciprocal[] {
   const result: ExclusionWithReciprocal[] = [];
   for (const exclusion of rawExclusions) {
