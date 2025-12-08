@@ -9,9 +9,14 @@ export class InviteeService {
       .filter((suggestion) => suggestion.type === InviteeType.Child)
       .map((suggestion) => suggestion.id)
 
-    return await apiGet<{childId: number, parentUsername: string, otherParentUsername?: string}[]>(
+    const result = await apiGet<{childId: number, parentUsername: string, otherParentUsername?: string}[]>(
       `/api/children/parents-username-by-ids?ids=${childIds}`
     );
+
+    console.log(childIds)
+    console.log(result)
+
+    return result
   }
 
   static async getSuggestions(searchEndPoint: string, search: string): Promise<{ invitee: InviteeSearchResult, parentsInfo: ChildIdAndParentsUsernames | null }[]> {

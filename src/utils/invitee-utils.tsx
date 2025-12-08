@@ -1,9 +1,29 @@
 import { ChildIdAndParentsUsernames, InviteeKey, InviteeSearchResult, InviteeType, Participant } from "@/type";
 
 export function suggestionText(suggestion: { invitee: InviteeSearchResult, parentsInfo: ChildIdAndParentsUsernames | null }) {
-  if (suggestion.parentsInfo && suggestion.parentsInfo.otherParentUsername) return `${suggestion.invitee.username} (<i>child of ${suggestion.parentsInfo.parentUsername} and ${suggestion.parentsInfo.otherParentUsername}</i>)`
+  if (suggestion.parentsInfo && suggestion.parentsInfo.otherParentUsername) {
+    return (
+      <>
+        {suggestion.invitee.username} (
+        <i>
+          child of {suggestion.parentsInfo.parentUsername} and {suggestion.parentsInfo.otherParentUsername}
+        </i>
+        )
+      </>
+    );
+  }
 
-  if (suggestion.parentsInfo) return `${suggestion.invitee.username} (<i>child of ${suggestion.parentsInfo.parentUsername})`
+  if (suggestion.parentsInfo) {
+    return (
+      <>
+        {suggestion.invitee.username} (
+        <i>
+          child of {suggestion.parentsInfo.parentUsername}
+        </i>
+        )
+      </>
+    );
+  }
 
   return suggestion.invitee.username;
 }

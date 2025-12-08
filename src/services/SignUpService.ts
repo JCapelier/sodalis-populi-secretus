@@ -9,13 +9,11 @@ export class SignUpService {
     try {
       const newUser = await apiPost<User>('/api/users/sign-up', payload);
       if (newUser && newUser.id) {
-        console.log("Before signIn");
         const signInResult = await signIn("credentials", {
           username: payload.username,
           password: payload.password,
           redirect: false,
         });
-        console.log("After signIn", signInResult);
         return { userId: newUser.id };
       }
       return { error: 'User created but could not sign in' };

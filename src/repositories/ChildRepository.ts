@@ -50,9 +50,9 @@ export class ChildRepository {
     }>(
       `
       SELECT
-        c.id as childId,
-        u1.username as parentUsername,
-        u2.username as otherParentUsername
+        c.id AS "childId",
+        u1.username AS "parentUsername",
+        u2.username AS "otherParentUsername"
       FROM children c
       LEFT JOIN users u1 ON c.parent_id = u1.id
       LEFT JOIN users u2 ON c.other_parent_id = u2.id
