@@ -1,5 +1,5 @@
-import { apiGet } from "@/lib/api";
-import { ChildIdAndParentsUsernames, InviteeSearchResult, InviteeType } from "@/type";
+import { apiGet, apiPut } from "@/lib/api";
+import { ChildIdAndParentsUsernames, InviteeKey, InviteeSearchResult, InviteeType, Participant } from "@/type";
 import { getFullSuggestions } from "@/utils/invitee-utils";
 
 export class InviteeService {
@@ -13,9 +13,6 @@ export class InviteeService {
       `/api/children/parents-username-by-ids?ids=${childIds}`
     );
 
-    console.log(childIds)
-    console.log(result)
-
     return result
   }
 
@@ -23,5 +20,13 @@ export class InviteeService {
     const invitees = await apiGet<InviteeSearchResult[]>(`${searchEndPoint}?search=${encodeURIComponent(search)}`);
     const childrenParentsInfo = await this.getParentsInfoFromChildrenAutocomplete(invitees);
     return getFullSuggestions(invitees, childrenParentsInfo)
+  }
+
+
+  static async updateStatusFromInvitedToNotified(eventParticipants: Participant[], inviteeParticipant: Participant) {
+    console.log(inviteeParticipant)
+      return await apiPut<{updatedParticipant: Participant, updatedEventParticipants: Participant[], updatedEvent: Event}>(
+        `/api/event-participants/${inviteeParticipant.id}`,
+        {eventParticipants: eventParticipants})
   }
 }

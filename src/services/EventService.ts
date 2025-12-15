@@ -1,6 +1,6 @@
 import { apiGet } from "@/lib/api";
 import { exclusionRepository } from "@/repositories/ExclusionRepository";
-import { Event, EventInfo, EventPayload, ExclusionWithReciprocal, ExclusionWithUsernames, InviteeType, Participant, Status } from "@/type";
+import { Event, EventInfo, EventPayload, ExclusionWithReciprocal, ExclusionWithUsernames, InviteeType, Participant, ParticipantStatus } from "@/type";
 import { ExclusionService } from "./ExclusionService";
 import { NextResponse } from "next/server";
 import { eventRepository } from "@/repositories/EventRepository";
@@ -10,6 +10,7 @@ import { EventParticipantService } from "./EventParticipantService";
 import { buildReciprocalExclusion, isSameExclusion, prepareEventExclusions } from "@/utils/exclusion-utils";
 import { shouldRunDraft } from "@/utils/event-utils";
 import { hasValidAssignment } from "@/utils/assignment-utils";
+
 
 export class EventService {
 
@@ -32,8 +33,12 @@ export class EventService {
     const childrenUsernames = await apiGet<{id: number, username: string}[]>(`/api/children/by-ids?ids=${childrenIds.join(',')}`);
 
     const participants: Participant[] = [];
-    childrenUsernames.forEach(child => participants.push({ invitee_id: child.id, type: InviteeType.Child, username: child.username }));
-    usersUsernames.forEach(user => participants.push({ invitee_id: user.id, type: InviteeType.User, username: user.username }));
+    childrenUsernames.forEach(child => {
+      const rawParticipant = participantsRaw.find((participant) => participant.invitee_id === child.id && participant.type === InviteeType.Child);
+      participants.push({ id: rawParticipant!.id, invitee_id: child.id, type: InviteeType.Child, username: child.username, status: rawParticipant!.status })});
+    usersUsernames.forEach(user => {
+      const rawParticipant = participantsRaw.find((participant) => participant.invitee_id === user.id && participant.type === InviteeType.User);
+      participants.push({ id: rawParticipant!.id, invitee_id: user.id, type: InviteeType.User, username: user.username, status: rawParticipant!.status })});
 
     // Build a map for O(1) participant lookup by composite key
     const participantMap = new Map<string, Participant>();
@@ -127,7 +132,7 @@ export class EventService {
 
   static async createParticipantsAndExclusionsForEvent(event: Event, body: EventPayload) {
     for (const participant of body.participants) {
-      await eventParticipantRepository.create({ ...participant, event_id: event.id, status: Status.Invited });
+      await eventParticipantRepository.create({ ...participant, event_id: event.id, status: ParticipantStatus.Invited });
     }
 
     for (const exclusion of body.exclusions) {

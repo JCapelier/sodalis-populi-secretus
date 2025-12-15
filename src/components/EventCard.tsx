@@ -21,6 +21,13 @@ interface EventCardProps {
 
 export default function EventCard({ name, endsAt, priceLimitCents, adminName, eventId, adminId, currentUserId, childDraft, eventParticipants = [], eventExclusions = [] }: EventCardProps) {
   const [open, setOpen] = useState(false);
+  const [participants, setParticipants] = useState(eventParticipants);
+
+  const handleStatusUpdate = (updatedParticipant: Participant) => {
+    setParticipants(prev => prev.map(p => p.id === updatedParticipant.id ? updatedParticipant : p));
+  };
+
+
   return (
     <div className="bg-white border border-gray-400 rounded-xl p-5 mb-4 shadow-md relative">
       <div className="flex items-center justify-between cursor-pointer" onClick={() => setOpen(o => !o)}>
@@ -66,10 +73,10 @@ export default function EventCard({ name, endsAt, priceLimitCents, adminName, ev
                 <EditEventButton eventId={eventId} />
               </>
             )}
-            {(eventParticipants.some(participant => participant.invitee_id === currentUserId && participant.type === InviteeType.User)
-              || (childDraft.option && childDraft.childId && eventParticipants.some(participant => participant.invitee_id === childDraft.childId && participant.type === InviteeType.Child))
+            {(participants.some(participant => participant.invitee_id === currentUserId && participant.type === InviteeType.User)
+              || (childDraft.option && childDraft.childId && participants.some(participant => participant.invitee_id === childDraft.childId && participant.type === InviteeType.Child))
             ) && (
-              <DraftButton eventId={eventId} currentUserId={currentUserId} childDraft={childDraft} priceLimitCents={priceLimitCents} />
+              <DraftButton eventId={eventId} currentUserId={currentUserId} childDraft={childDraft} priceLimitCents={priceLimitCents} eventParticipants={participants} onStatusUpdate={handleStatusUpdate}/>
             )}
             {Number(currentUserId) === Number(adminId) && (
               <div className="flex-1 flex justify-end">

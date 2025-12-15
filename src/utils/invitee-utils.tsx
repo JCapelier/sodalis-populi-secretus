@@ -59,3 +59,9 @@ export function removeInviteeFromInvited(participant: Participant, invited: Part
     !(invitee.invitee_id === participant.invitee_id && invitee.type === participant.type)
   );
 }
+
+export function getInviteeParticipant(eventParticipants: Participant[], inviteeKey: InviteeKey): Participant {
+  return (
+    eventParticipants.find((participant) => participant.invitee_id === inviteeKey.id && participant.type === inviteeKey.type)!
+  )
+}

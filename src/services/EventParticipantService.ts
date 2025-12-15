@@ -1,5 +1,5 @@
 import { eventParticipantRepository } from "@/repositories/EventParticipantRepository";
-import { Participant, Status } from "@/type";
+import { Participant, ParticipantStatus } from "@/type";
 
 export class EventParticipantService {
   static async updateEventParticipants(eventId: number, previousParticipants: Participant[], newParticipants: Participant[]) {
@@ -13,7 +13,7 @@ export class EventParticipantService {
         event_id: eventId,
         invitee_id: participant.invitee_id,
         type: participant.type,
-        status: Status.Invited
+        status: ParticipantStatus.Invited
       });
     }
 

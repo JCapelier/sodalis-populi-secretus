@@ -1,5 +1,5 @@
 import { query } from "@/lib/db";
-import { Event } from "@/type";
+import { Event, EventStatus } from "@/type";
 
 export class EventRepository {
 
@@ -55,6 +55,17 @@ export class EventRepository {
        VALUES ($1, $2, $3, $4)
        RETURNING *`,
       [data.name, data.ends_at, data.admin_id, data.price_limit_cents]
+    );
+    return result.rows[0];
+  }
+
+  async updateStatusToActive(id: number) {
+    const result = await query<Event>(
+      `UPDATE events
+      SET status = $1
+      WHERE id = $2
+      RETURNING *`,
+      [EventStatus.Active, id]
     );
     return result.rows[0];
   }
