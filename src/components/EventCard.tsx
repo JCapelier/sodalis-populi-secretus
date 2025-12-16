@@ -24,7 +24,10 @@ export default function EventCard({ name, endsAt, priceLimitCents, adminName, ev
   const [participants, setParticipants] = useState(eventParticipants);
 
   const handleStatusUpdate = (updatedParticipant: Participant) => {
+    console.log(updatedParticipant)
+    console.log('participants:', participants)
     setParticipants(prev => prev.map(p => p.id === updatedParticipant.id ? updatedParticipant : p));
+    console.log("New Participants:", participants)
   };
 
 
@@ -47,8 +50,17 @@ export default function EventCard({ name, endsAt, priceLimitCents, adminName, ev
           {priceLimitCents !== undefined && priceLimitCents !== null && (
             <div className="text-gray-700"><strong>Price limit:</strong> {Number.isInteger(priceLimitCents / 100) ? (priceLimitCents / 100).toFixed(0) : (priceLimitCents / 100).toFixed(2)}€</div>
           )}
-          {eventParticipants.length > 0 && (
-            <div className="text-gray-700"><strong>Participants:</strong> {eventParticipants.map(p => p.username).join(", ")}</div>
+          {participants.length > 0 && (
+            <div className="text-gray-700">
+              <strong>Participants:</strong>
+              <ul>
+                {participants.map((p) => (
+                  <li key={p.id || p.username} className={p.status === 'notified' ? 'text-green-600' : 'text-red-600'}>
+                    {p.username}
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
           {eventExclusions.length > 0 && (
             <div className="text-gray-700"><strong>Exclusions:</strong>

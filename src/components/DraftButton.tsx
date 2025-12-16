@@ -46,7 +46,9 @@ const DraftButton: React.FC<DraftButtonPropsWithLimit> = ({ eventId, currentUser
         const response = await InviteeService.updateStatusFromInvitedToNotified(eventParticipants, inviteeParticipant);
         if (response && response.updatedParticipant) {
           setInviteeParticipantStatus(response.updatedParticipant.status);
-          if (onStatusUpdate) onStatusUpdate(response.updatedParticipant);
+          // Merge updatedParticipant with original to preserve username and other fields
+          const mergedParticipant = { ...inviteeParticipant, ...response.updatedParticipant };
+          if (onStatusUpdate) onStatusUpdate(mergedParticipant);
         }
         // Optionally handle event status update here if needed
       } catch (error) {
