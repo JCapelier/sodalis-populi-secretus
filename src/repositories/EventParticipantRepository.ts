@@ -1,5 +1,5 @@
 import { query } from "@/lib/db";
-import { InviteeType, Participant, Status } from "@/type";
+import { InviteeType, Participant, ParticipantStatus } from "@/type";
 
 export class EventParticipantRepository {
 
@@ -23,7 +23,7 @@ export class EventParticipantRepository {
     event_id: number;
     invitee_id: number;
     type: InviteeType;
-    status: Status;
+    status: ParticipantStatus;
   }): Promise<Participant> {
     const result = await query<Participant>(
       `INSERT INTO event_participants (event_id, invitee_id, type, status)
@@ -43,7 +43,7 @@ export class EventParticipantRepository {
     const eventIds   = participants.map(() => event_id);
     const inviteeIds = participants.map((p) => p.invitee_id);
     const types      = participants.map((p) => p.type);
-    const statuses   = participants.map(() => Status.Invited);
+    const statuses   = participants.map(() => ParticipantStatus.Invited);
 
     const sql = `
       INSERT INTO event_participants (event_id, invitee_id, type, status)
@@ -67,7 +67,7 @@ export class EventParticipantRepository {
     event_id: number;
     invitee_id: number;
     type: InviteeType;
-    status: Status;
+    status: ParticipantStatus;
   }): Promise<Participant> {
     const result = await query<Participant>(
       `UPDATE event_participants
@@ -75,6 +75,17 @@ export class EventParticipantRepository {
        WHERE id = $5
        RETURNING *`,
       [data.event_id, data.invitee_id, data.type, data.status, id]
+    );
+    return result.rows[0];
+  }
+
+  async updateStatusToNotified(id: number): Promise<Participant> {
+    const result = await query<Participant>(
+      `UPDATE event_participants
+      SET status = $1
+      WHERE id = $2
+      RETURNING *`,
+      [ParticipantStatus.Notified, id]
     );
     return result.rows[0];
   }

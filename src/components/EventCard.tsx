@@ -21,6 +21,16 @@ interface EventCardProps {
 
 export default function EventCard({ name, endsAt, priceLimitCents, adminName, eventId, adminId, currentUserId, childDraft, eventParticipants = [], eventExclusions = [] }: EventCardProps) {
   const [open, setOpen] = useState(false);
+  const [participants, setParticipants] = useState(eventParticipants);
+
+  const handleStatusUpdate = (updatedParticipant: Participant) => {
+    console.log(updatedParticipant)
+    console.log('participants:', participants)
+    setParticipants(prev => prev.map(p => p.id === updatedParticipant.id ? updatedParticipant : p));
+    console.log("New Participants:", participants)
+  };
+
+
   return (
     <div className="bg-white border border-gray-400 rounded-xl p-5 mb-4 shadow-md relative">
       <div className="flex items-center justify-between cursor-pointer" onClick={() => setOpen(o => !o)}>
@@ -40,8 +50,17 @@ export default function EventCard({ name, endsAt, priceLimitCents, adminName, ev
           {priceLimitCents !== undefined && priceLimitCents !== null && (
             <div className="text-gray-700"><strong>Price limit:</strong> {Number.isInteger(priceLimitCents / 100) ? (priceLimitCents / 100).toFixed(0) : (priceLimitCents / 100).toFixed(2)}€</div>
           )}
-          {eventParticipants.length > 0 && (
-            <div className="text-gray-700"><strong>Participants:</strong> {eventParticipants.map(p => p.username).join(", ")}</div>
+          {participants.length > 0 && (
+            <div className="text-gray-700">
+              <strong>Participants:</strong>
+              <ul>
+                {participants.map((p) => (
+                  <li key={p.id || p.username} className={p.status === 'notified' ? 'text-green-600' : 'text-red-600'}>
+                    {p.username}
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
           {eventExclusions.length > 0 && (
             <div className="text-gray-700"><strong>Exclusions:</strong>
@@ -66,10 +85,10 @@ export default function EventCard({ name, endsAt, priceLimitCents, adminName, ev
                 <EditEventButton eventId={eventId} />
               </>
             )}
-            {(eventParticipants.some(participant => participant.invitee_id === currentUserId && participant.type === InviteeType.User)
-              || (childDraft.option && childDraft.childId && eventParticipants.some(participant => participant.invitee_id === childDraft.childId && participant.type === InviteeType.Child))
+            {(participants.some(participant => participant.invitee_id === currentUserId && participant.type === InviteeType.User)
+              || (childDraft.option && childDraft.childId && participants.some(participant => participant.invitee_id === childDraft.childId && participant.type === InviteeType.Child))
             ) && (
-              <DraftButton eventId={eventId} currentUserId={currentUserId} childDraft={childDraft} priceLimitCents={priceLimitCents} />
+              <DraftButton eventId={eventId} currentUserId={currentUserId} childDraft={childDraft} priceLimitCents={priceLimitCents} eventParticipants={participants} onStatusUpdate={handleStatusUpdate}/>
             )}
             {Number(currentUserId) === Number(adminId) && (
               <div className="flex-1 flex justify-end">

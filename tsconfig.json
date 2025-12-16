@@ -29,6 +29,6 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     "**/*.mts"
-, "scripts/seed.js"  ],
+, "scripts/seed.js", "scripts/closeExpiredEvents.ts"  ],
   "exclude": ["node_modules"]
 }

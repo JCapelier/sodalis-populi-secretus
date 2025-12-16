@@ -1,34 +1,64 @@
 'use client';
-import React, { useState, } from "react";
+import React, { useState, useEffect } from "react";
 import EasterEgg from "./EasterEgg";
 import { useSession } from "next-auth/react";
 import { apiGet } from "@/lib/api";
 import { getEasterEgg } from "@/utils/easter-egg-utils";
+import { InviteeKey, InviteeType, Participant, ParticipantStatus } from "@/type";
+import { InviteeService } from "@/services/InviteeService";
+import { getInviteeParticipant } from "@/utils/invitee-utils";
 
 interface DraftButtonProps {
   eventId: number;
   currentUserId: number;
   childDraft: { option: boolean; childId?: number; childName?: string };
+  eventParticipants: Participant[]
 }
+
 
 interface DraftButtonPropsWithLimit extends DraftButtonProps {
   priceLimitCents?: number | null;
+  onStatusUpdate?: (updatedParticipant: Participant) => void;
 }
 
-const DraftButton: React.FC<DraftButtonPropsWithLimit> = ({ eventId, currentUserId, childDraft, priceLimitCents }) => {
+const DraftButton: React.FC<DraftButtonPropsWithLimit> = ({ eventId, currentUserId, childDraft, priceLimitCents, eventParticipants, onStatusUpdate }) => {
   const [open, setOpen] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { data: session } = useSession();
+  const [inviteeParticipantStatus, setInviteeParticipantStatus] = useState<ParticipantStatus>()
+
+  const inviteeKey: InviteeKey = childDraft.option && childDraft.childId ? {id: childDraft.childId, type: InviteeType.Child} : {id: currentUserId, type: InviteeType.User};
+  const inviteeParticipant = getInviteeParticipant(eventParticipants, inviteeKey)
+
+  useEffect(() => {
+    setInviteeParticipantStatus(inviteeParticipant.status);
+  }, [childDraft.childId, childDraft.option, currentUserId, eventParticipants, inviteeKey, inviteeParticipant.status]);
 
   const handleDraft = async () => {
     setLoading(true);
     setError(null);
     setResult(null);
 
+    if (inviteeParticipantStatus === ParticipantStatus.Invited) {
+      try {
+        const response = await InviteeService.updateStatusFromInvitedToNotified(eventParticipants, inviteeParticipant);
+        if (response && response.updatedParticipant) {
+          setInviteeParticipantStatus(response.updatedParticipant.status);
+          // Merge updatedParticipant with original to preserve username and other fields
+          const mergedParticipant = { ...inviteeParticipant, ...response.updatedParticipant };
+          if (onStatusUpdate) onStatusUpdate(mergedParticipant);
+        }
+        // Optionally handle event status update here if needed
+      } catch (error) {
+        console.error('Error updating participant status:', error);
+        setError('Failed to update participant status. Please try again.');
+        setLoading(false);
+        return;
+      }
+    }
     try {
-
       const response = childDraft && childDraft.option ? await apiGet<{ username: string }>(`/api/events/${eventId}/my-pairing/children?childId=${childDraft.childId}`) : await apiGet<{ username: string }>(`/api/events/${eventId}/my-pairing/users?userId=${currentUserId}`);
       setResult(response?.username ?? null);
     } catch (e: unknown) {
@@ -68,11 +98,11 @@ const DraftButton: React.FC<DraftButtonPropsWithLimit> = ({ eventId, currentUser
         className={`px-2 py-1 rounded ${isSignedIn ? 'bg-blue-500 text-white' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
         disabled={!isSignedIn}
       >
-        Draft
+        {inviteeParticipantStatus === ParticipantStatus.Invited ? 'Discover your draft' : 'See your draft again'}
       </button>
       {!isSignedIn && (
         <div className="mt-2 text-sm text-gray-500">Sign in to see your pairing</div>
-      )}
+      )}  
       {open && (
         <div className="fixed inset-0 z-1000 flex items-center justify-center">
           {/* Overlay */}

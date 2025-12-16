@@ -1,4 +1,4 @@
-import { Participant } from "@/type"
+import { EventParticipant, Participant, ParticipantStatus } from "@/type"
 
 export function isSameParticipant(participant: Participant, otherParticipant: Participant): boolean {
   return (
@@ -16,4 +16,8 @@ export function areSameParticipants(participants: Participant[], otherParticipan
       participants.some((participant) =>
         isSameParticipant(participant, otherParticipant)))))
   )
+}
+
+export function isParticipantAlreadyNotified(participant: EventParticipant) {
+  return participant.status !== ParticipantStatus.Notified;
 }

@@ -33,8 +33,11 @@ export async function GET(request: Request) {
 
     // Attach usernames
     const participantsWithNames = participants.map(participant => ({
+      id: participant.id,
+      event_id: participant.event_id,
       invitee_id: participant.invitee_id,
       type: participant.type,
+      status: participant.status,
       username: participant.type === 'user' ? userMap.get(participant.invitee_id) || String(participant.invitee_id) : childMap.get(participant.invitee_id) || String(participant.invitee_id),
     }));
     return NextResponse.json(participantsWithNames);
