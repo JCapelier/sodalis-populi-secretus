@@ -102,7 +102,7 @@ const DraftButton: React.FC<DraftButtonPropsWithLimit> = ({ eventId, currentUser
       </button>
       {!isSignedIn && (
         <div className="mt-2 text-sm text-gray-500">Sign in to see your pairing</div>
-      )}
+      )}  
       {open && (
         <div className="fixed inset-0 z-1000 flex items-center justify-center">
           {/* Overlay */}

@@ -6,9 +6,9 @@ export enum ParticipantStatus {
 }
 
 export enum EventStatus {
-  Pending = "pending",
-  Active = "active",
-  Closed = "closed"
+  Pending = 'pending',
+  Active = 'active',
+  Closed = 'closed'
 }
 
 export enum InviteeType {

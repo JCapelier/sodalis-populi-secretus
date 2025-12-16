@@ -11,6 +11,14 @@ export class EventRepository {
     return result.rows[0] || null;
   }
 
+  async findExpiredEvents(now: Date) {
+    const result = await query<Event>(
+      `SELECT * FROM events WHERE ends_at IS NOT NULL AND ends_at < $1 AND status != 'closed'`,
+      [now.toISOString()]
+    );
+    return result.rows;
+  }
+
   async findAll(): Promise<Event[]> {
     const result = await query<Event>(`SELECT * FROM events`);
     return result.rows;
@@ -68,6 +76,17 @@ export class EventRepository {
       [EventStatus.Active, id]
     );
     return result.rows[0];
+  }
+
+  async updateStatusToClosed(id: number) {
+    const result = await query<Event>(
+      `UPDATE events
+      SET status = $1
+      WHERE id = $2
+      RETURNING *`,
+      [EventStatus.Closed, id]
+    )
+    return result.rows[0]
   }
 
   async update(id: number, data: {
