@@ -43,7 +43,7 @@ export type EventParticipant = {
 }
 
 export type Exclusion = { id?: number, invitee_id: number; invitee_type: InviteeType, excluded_invitee_id: number; excluded_invitee_type: InviteeType, event_id?: number };
-export type Participant = { id?: number, event_id?: number, invitee_id: number; type: InviteeType, status: ParticipantStatus, username: string };
+export type Participant = { id?: number, event_id?: number, invitee_id: number; type: InviteeType, status?: ParticipantStatus, username: string };
 export type Pairing = { giver_id: number; giver_type: InviteeType, receiver_id: number; receiver_type: InviteeType,}
 
 export interface EventInfo extends Event {
