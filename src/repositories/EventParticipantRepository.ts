@@ -62,6 +62,16 @@ export class EventParticipantRepository {
     return result.rows;
   }
 
+  async resetParticipantsStatusForEvent(event_id: number): Promise<Participant[]> {
+    const result = await query<Participant>(
+      `UPDATE event_participants
+      SET status = $1
+      WHERE event_id = $2
+      RETURNING *`,
+      [ParticipantStatus.Invited, event_id]
+    );
+    return result.rows;
+  }
 
   async update(id: number, data: {
     event_id: number;

@@ -95,6 +95,7 @@ export class EventService {
     let draftResult = null;
     if (shouldRunDraft(previousParticipants, body.participants, previousExclusions, exclusions)) {
       draftResult = await DraftService.runDraft(eventId, newParticipantsKeys, exclusions);
+      await eventParticipantRepository.resetParticipantsStatusForEvent(eventId);
       if (!draftResult.success) return { error: draftResult.error || "Draft failed" };
     }
 

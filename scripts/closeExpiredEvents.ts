@@ -15,4 +15,4 @@ console.log('closeExpiredEvents scheduler started at', new Date().toISOString())
 
 await closeExpiredEventsOnce();
 
-cron.schedule('0 0 * * *', closeExpiredEventsOnce, { timezone: 'Europe/Paris' });
+cron.schedule('0 0 * * *', closeExpiredEventsOnce);

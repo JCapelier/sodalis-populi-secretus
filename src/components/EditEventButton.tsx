@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import EventForm from "./forms/EventForm";
 import { useRouter } from "next/navigation";
 
-export default function EditEventButton({ eventId }: { eventId: number }) {
+export default function EditEventButton({ eventId, onEventUpdated }: { eventId: number, onEventUpdated?: () => void }) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
 
@@ -38,9 +38,9 @@ export default function EditEventButton({ eventId }: { eventId: number }) {
               <span className="font-semibold text-lg text-blue-800">Edit Event</span>
               <button onClick={() => setOpen(false)} className="text-gray-500 hover:text-black text-2xl font-bold px-2">&times;</button>
             </div>
-            <EventForm idString={eventId.toString()} onSuccess={() => {
+            <EventForm idString={eventId.toString()} onSuccess={async () => {
               setOpen(false);
-              router.refresh();
+              if (onEventUpdated) await onEventUpdated();
             }} />
           </div>
         </div>
