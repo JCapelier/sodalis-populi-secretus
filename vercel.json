@@ -1,9 +1,0 @@
-{
-  "cron": [
-    {
-      "path": "/api/cron/closeExpiredEvents",
-      "schedule": "0 0 * * *"
-    }
-  ]
-}
-
