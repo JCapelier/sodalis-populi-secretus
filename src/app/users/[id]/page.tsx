@@ -34,7 +34,7 @@ export default async function UserDashboardPage({ params }: Props) {
   const fullChildrenEvents = await Promise.all(
     childrenEvents.map(async ({ child, events }) => ({
       child,
-      events: await Promise.all(events.map(event => EventService.getEventInfo(event))),
+      events: await Promise.all(events.map(event => await `/api/events/${event.id}/event-info`)),
     }))
   );
 
