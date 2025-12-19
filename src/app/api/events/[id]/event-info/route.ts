@@ -13,7 +13,7 @@ export async function GET(request: Request, context: {params: Promise<{id: strin
       return NextResponse.json({ error: "Event not found" }, { status: 404 });
     }
 
-    const eventInfo = EventService.getEventInfoServerSide(event)
+    const eventInfo = await EventService.getEventInfoServerSide(event);
 
     return NextResponse.json(eventInfo);
   } catch (error) {

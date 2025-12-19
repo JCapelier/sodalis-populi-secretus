@@ -16,7 +16,10 @@ import { childRepository } from "@/repositories/ChildRepository";
 
 export class EventService {
 
-  static async getEventInfo(event: Event): Promise<EventInfo> {
+  static async getEventInfo(event: Event): Promise<EventInfo & {
+    participants: Participant[];
+    exclusions: ExclusionWithUsernames[];
+  }> {
     const participantsRaw = await apiGet<Participant[]>(`/api/event-participants/by-event-id?event-id=${event.id}`);
 
     const usersIds = participantsRaw
@@ -64,52 +67,55 @@ export class EventService {
     };
   }
 
-  static async getEventInfoServerSide(event: Event): Promise<EventInfo> {
+  static async getEventInfoServerSide(event: Event): Promise<EventInfo & {
+    participants: Participant[];
+    exclusions: ExclusionWithUsernames[];
+  }> {
     const participantsRaw = await eventParticipantRepository.findByEventId(event.id);
 
-    const usersIds = participantsRaw
-      .filter(participant => participant.type === InviteeType.User)
+  const usersIds = participantsRaw
+    .filter(participant => participant.type === InviteeType.User)
+    .map(participant => participant.invitee_id);
+
+  const usersUsernames = await userRepository.findByIds(usersIds);
+
+    const childrenIds = participantsRaw
+      .filter(participant => participant.type === InviteeType.Child)
       .map(participant => participant.invitee_id);
 
-    const usersUsernames = await userRepository.findByIds(usersIds);
+    const childrenUsernames = await childRepository.findByIds(childrenIds);
 
-      const childrenIds = participantsRaw
-        .filter(participant => participant.type === InviteeType.Child)
-        .map(participant => participant.invitee_id);
+    const participants: Participant[] = [];
+    childrenUsernames.forEach(child => {
+      const rawParticipant = participantsRaw.find((participant) => participant.invitee_id === child.id && participant.type === InviteeType.Child);
+      participants.push({ id: rawParticipant!.id, invitee_id: child.id, type: InviteeType.Child, username: child.username, status: rawParticipant!.status })});
+    usersUsernames.forEach(user => {
+      const rawParticipant = participantsRaw.find((participant) => participant.invitee_id === user.id && participant.type === InviteeType.User);
+      participants.push({ id: rawParticipant!.id, invitee_id: user.id, type: InviteeType.User, username: user.username, status: rawParticipant!.status })});
 
-      const childrenUsernames = await childRepository.findByIds(childrenIds);
+    // Build a map for O(1) participant lookup by composite key
+    const participantMap = new Map<string, Participant>();
+    participants.forEach(p => participantMap.set(`${p.invitee_id}-${p.type}`, p));
 
-      const participants: Participant[] = [];
-      childrenUsernames.forEach(child => {
-        const rawParticipant = participantsRaw.find((participant) => participant.invitee_id === child.id && participant.type === InviteeType.Child);
-        participants.push({ id: rawParticipant!.id, invitee_id: child.id, type: InviteeType.Child, username: child.username, status: rawParticipant!.status })});
-      usersUsernames.forEach(user => {
-        const rawParticipant = participantsRaw.find((participant) => participant.invitee_id === user.id && participant.type === InviteeType.User);
-        participants.push({ id: rawParticipant!.id, invitee_id: user.id, type: InviteeType.User, username: user.username, status: rawParticipant!.status })});
+    // Fetch all exclusions for the event (with user_id, excluded_user_id)
+    const exclusions = await exclusionRepository.findByEventId(event.id);
 
-      // Build a map for O(1) participant lookup by composite key
-      const participantMap = new Map<string, Participant>();
-      participants.forEach(p => participantMap.set(`${p.invitee_id}-${p.type}`, p));
+    // Attach usernames to exclusions using the map
+    const exclusionsWithUsernames = exclusions.map(exclusion => ({
+      ...exclusion,
+      giverUsername: participantMap.get(`${exclusion.invitee_id}-${exclusion.invitee_type}`)?.username ?? '',
+      receiverUsername: participantMap.get(`${exclusion.excluded_invitee_id}-${exclusion.excluded_invitee_type}`)?.username ?? ''
+    }));
 
-      // Fetch all exclusions for the event (with user_id, excluded_user_id)
-      const exclusions = await exclusionRepository.findByEventId(event.id);
+    // Get admin username
+    const adminUsername = await userRepository.getUsernameById(event.admin_id);
 
-      // Attach usernames to exclusions using the map
-      const exclusionsWithUsernames = exclusions.map(exclusion => ({
-        ...exclusion,
-        giverUsername: participantMap.get(`${exclusion.invitee_id}-${exclusion.invitee_type}`)?.username ?? '',
-        receiverUsername: participantMap.get(`${exclusion.excluded_invitee_id}-${exclusion.excluded_invitee_type}`)?.username ?? ''
-      }));
-
-      // Get admin username
-      const adminUsername = await userRepository.getUsernameById(event.admin_id);
-
-      return {
-        ...event,
-        adminUsername,
-        participants: participants,
-        exclusions: exclusionsWithUsernames,
-      };
+    return {
+      ...event,
+      adminUsername,
+      participants: participants,
+      exclusions: exclusionsWithUsernames,
+    };
   }
 
   static async prepareEventExclusions(body: EventPayload) {
