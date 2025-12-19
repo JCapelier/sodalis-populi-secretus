@@ -5,6 +5,7 @@ import DraftButton from "./DraftButton";
 import DeleteEventButton from "./DeleteEventButton";
 import { ExclusionWithUsernames, InviteeType, Participant } from "@/type";
 import { formatExclusion } from "@/utils/exclusion-utils";
+import { apiGet } from "@/lib/api";
 
 interface EventCardProps {
   name: string;
@@ -20,14 +21,19 @@ interface EventCardProps {
 }
 
 export default function EventCard({ name, endsAt, priceLimitCents, adminName, eventId, adminId, currentUserId, childDraft, eventParticipants = [], eventExclusions = [] }: EventCardProps) {
+
   const [open, setOpen] = useState(false);
   const [participants, setParticipants] = useState(eventParticipants);
 
+  const fetchParticipants = async () => {
+    const updatedParticipants = await apiGet<Participant[]>(`/api/event-participants/by-event-id?event-id=${eventId}`);
+    if (updatedParticipants) {
+      setParticipants(updatedParticipants);
+    }
+  };
+
   const handleStatusUpdate = (updatedParticipant: Participant) => {
-    console.log(updatedParticipant)
-    console.log('participants:', participants)
     setParticipants(prev => prev.map(p => p.id === updatedParticipant.id ? updatedParticipant : p));
-    console.log("New Participants:", participants)
   };
 
 
@@ -82,7 +88,7 @@ export default function EventCard({ name, endsAt, priceLimitCents, adminName, ev
           <div className="flex gap-2 mt-4 items-center">
             {Number(currentUserId) === Number(adminId) && (
               <>
-                <EditEventButton eventId={eventId} />
+                <EditEventButton eventId={eventId} onEventUpdated={fetchParticipants} />
               </>
             )}
             {(participants.some(participant => participant.invitee_id === currentUserId && participant.type === InviteeType.User)
