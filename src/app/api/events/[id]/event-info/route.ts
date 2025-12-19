@@ -3,7 +3,6 @@ import { eventParticipantRepository } from "@/repositories/EventParticipantRepos
 import { eventRepository } from "@/repositories/EventRepository";
 import { exclusionRepository } from "@/repositories/ExclusionRepository";
 import { userRepository } from "@/repositories/UserRepository";
-import { EventService } from "@/services/EventService";
 import { InviteeType, Participant } from "@/type";
 import { NextResponse } from "next/server";
 
@@ -17,8 +16,6 @@ export async function GET(request: Request, context: {params: Promise<{id: strin
     if (!event) {
       return NextResponse.json({ error: "Event not found" }, { status: 404 });
     }
-
-    const eventInfo = EventService.getEventInfo(event)
 
     const participantsRaw = await eventParticipantRepository.findByEventId(id);
 
@@ -59,7 +56,7 @@ export async function GET(request: Request, context: {params: Promise<{id: strin
       // Get admin username
       const adminUsername = await userRepository.getUsernameById(event.admin_id);
 
-      return {
+      const eventInfo = {
         ...event,
         adminUsername,
         participants: participants,
@@ -67,9 +64,6 @@ export async function GET(request: Request, context: {params: Promise<{id: strin
       };
 
 
-    if (!eventInfo) {
-      return NextResponse.json({error: "Could not find infos for event"}, {status: 404})
-    }
 
     return NextResponse.json(eventInfo);
   } catch (error) {
