@@ -45,11 +45,11 @@ export default async function UserDashboardPage({ params }: Props) {
   const participatingEvents = await eventRepository.findByUserParticipant(userId);
 
   const fullManagedEvents = await Promise.all(
-    managedEvents.map((event) => EventService.getEventInfo(event))
+    managedEvents.map((event) => EventService.getEventInfoServerSide(event))
   );
 
   const fullParticipatingEvents = await Promise.all(
-    participatingEvents.map((event) => EventService.getEventInfo(event))
+    participatingEvents.map((event) => EventService.getEventInfoServerSide(event))
   );
 
   return (
