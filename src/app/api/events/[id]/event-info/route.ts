@@ -63,8 +63,6 @@ export async function GET(request: Request, context: {params: Promise<{id: strin
         exclusions: exclusionsWithUsernames,
       };
 
-
-
     return NextResponse.json(eventInfo);
   } catch (error) {
     console.error("Fetch event error", error);
